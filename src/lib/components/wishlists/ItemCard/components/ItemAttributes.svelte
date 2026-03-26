@@ -58,6 +58,18 @@
         {/if}
     </div>
 </div>
+<div class="flex items-center gap-2" data-testid="item-requirement">
+    <iconify-icon icon={item.optional ? "ion:ellipse-outline" : "ion:ellipse"}></iconify-icon>
+    <span>{item.optional ? $t("wishes.optional") : $t("wishes.required")}</span>
+</div>
+{#if item.dependsOn.length > 0}
+    <div class="flex items-center gap-2" data-testid="item-dependencies">
+        <iconify-icon icon="ion:git-network"></iconify-icon>
+        <span>
+            {$t("wishes.depends-on")}: {item.dependsOn.map((dependency) => dependency.name).join(", ")}
+        </span>
+    </div>
+{/if}
 {#if showDetail && showClaimedName && item.claims.length > 0 && (item.userId !== user?.id || showClaimForOwner)}
     <div class="card text-sm">
         <button

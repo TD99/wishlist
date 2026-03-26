@@ -22,13 +22,14 @@ export const load: PageServerLoad = async ({ params }) => {
     if (isNaN(parseInt(params.itemId))) {
         error(400, $t("errors.item-id-must-be-a-number"));
     }
+    const itemId = parseInt(params.itemId);
 
     const activeMembership = await getActiveMembership(user);
     const config = await getConfig(activeMembership.groupId);
 
     const item = await client.item.findUnique({
         where: {
-            id: parseInt(params.itemId),
+            id: itemId,
             lists: {
                 some: {
                     list: {
@@ -39,6 +40,11 @@ export const load: PageServerLoad = async ({ params }) => {
         },
         include: {
             itemPrice: true,
+            dependencies: {
+                select: {
+                    dependsOnId: true
+                }
+            },
             lists: {
                 select: {
                     addedById: true,
@@ -69,10 +75,33 @@ export const load: PageServerLoad = async ({ params }) => {
     }
 
     const lists = await getAvailableLists(item.userId, user.id);
+    const dependencyOptions = await client.item.findMany({
+        select: {
+            id: true,
+            name: true,
+            optional: true,
+            mostWanted: true
+        },
+        where: {
+            id: {
+                not: itemId
+            },
+            userId: item.userId,
+            lists: {
+                some: {
+                    listId: {
+                        in: item.lists.map(({ list }) => list.id)
+                    }
+                }
+            }
+        },
+        orderBy: [{ optional: "asc" }, { mostWanted: "desc" }, { name: "asc" }]
+    });
 
     return {
         item: {
             ...item,
+            dependencyIds: item.dependencies.map((dependency) => dependency.dependsOnId),
             lists: item.lists.map(({ list, addedById }) => ({
                 id: list.id,
                 canModify:
@@ -81,6 +110,7 @@ export const load: PageServerLoad = async ({ params }) => {
                     list.managers.find(({ userId }) => userId === user.id) !== undefined
             }))
         },
+        dependencyOptions,
         lists
     };
 };
@@ -88,6 +118,7 @@ export const load: PageServerLoad = async ({ params }) => {
 export const actions: Actions = {
     default: async ({ request, params, url: requestUrl }) => {
         const user = requireLogin();
+        const $t = await getFormatter();
 
         const itemFormSchema = await getItemUpdateSchema();
         const form = await request.formData().then(extractFormData).then(itemFormSchema.safeParse);
@@ -95,7 +126,21 @@ export const actions: Actions = {
         if (!form.success) {
             return fail(400, { errors: z.flattenError(form.error).fieldErrors });
         }
-        const { url, imageUrl, image, name, price, currency, quantity, note, lists, mostWanted } = form.data;
+        const {
+            url,
+            imageUrl,
+            image,
+            name,
+            price,
+            currency,
+            quantity,
+            note,
+            lists,
+            dependsOnIds,
+            optional,
+            mostWanted
+        } = form.data;
+        const itemId = parseInt(params.itemId);
 
         const item = await client.item.findUniqueOrThrow({
             include: {
@@ -114,7 +159,7 @@ export const actions: Actions = {
                 }
             },
             where: {
-                id: parseInt(params.itemId)
+                id: itemId
             }
         });
 
@@ -156,8 +201,38 @@ export const actions: Actions = {
         });
 
         const desiredListIds = new Set(desiredLists.map(({ id }) => id));
+        const sanitizedDependsOnIds = sanitizeDependencyIds(dependsOnIds);
 
-        const nextDisplayOrderByList = await getNextDisplayOrderForLists([...desiredListIds], mostWanted);
+        if (sanitizedDependsOnIds.includes(itemId)) {
+            return fail(400, { errors: { dependsOnIds: [$t("errors.item-cannot-depend-on-itself")] } });
+        }
+
+        if (sanitizedDependsOnIds.length > 0) {
+            const dependencies = await client.item.findMany({
+                select: {
+                    id: true,
+                    optional: true
+                },
+                where: {
+                    id: {
+                        in: sanitizedDependsOnIds
+                    },
+                    userId: item.userId
+                }
+            });
+            if (dependencies.length !== sanitizedDependsOnIds.length) {
+                return fail(400, { errors: { dependsOnIds: [$t("errors.one-or-more-item-dependencies-invalid")] } });
+            }
+            if (dependencies.some((dependency) => dependency.optional !== optional)) {
+                return fail(400, { errors: { dependsOnIds: [$t("errors.one-or-more-item-dependencies-invalid")] } });
+            }
+            const createsCycle = await wouldCreateDependencyCycle(itemId, sanitizedDependsOnIds);
+            if (createsCycle) {
+                return fail(400, { errors: { dependsOnIds: [$t("errors.item-dependency-cycle-detected")] } });
+            }
+        }
+
+        const nextDisplayOrderByList = await getNextDisplayOrderForLists([...desiredListIds], mostWanted, optional);
 
         const listItemsToDelete = item.lists
             // only the list owner or the person who added the item can remove it from the list
@@ -184,7 +259,8 @@ export const actions: Actions = {
         );
 
         let listItemsToUpdate: Prisma.ListItemUpdateWithWhereUniqueWithoutItemInput[] | undefined = undefined;
-        // If item is newly most wanted, then update existing lists
+        const requirementChanged = item.optional !== optional;
+        // If item is newly most wanted, or moved between required/optional sections, update existing list item order.
         if (!item.mostWanted && mostWanted) {
             listItemsToUpdate = desiredLists
                 // existing lists only
@@ -195,7 +271,22 @@ export const actions: Actions = {
                     },
                     where: {
                         listId_itemId: {
-                            itemId: parseInt(params.itemId),
+                            itemId,
+                            listId: list.id
+                        }
+                    }
+                }));
+        } else if (requirementChanged) {
+            listItemsToUpdate = desiredLists
+                // existing lists only
+                .filter((l) => item.lists.find(({ list }) => list.id === l.id) !== undefined)
+                .map((list) => ({
+                    data: {
+                        displayOrder: nextDisplayOrderByList[list.id] || 0
+                    },
+                    where: {
+                        listId_itemId: {
+                            itemId,
                             listId: list.id
                         }
                     }
@@ -204,7 +295,7 @@ export const actions: Actions = {
 
         const updatedItem = await client.item.update({
             where: {
-                id: parseInt(params.itemId)
+                id: itemId
             },
             data: {
                 name,
@@ -213,7 +304,18 @@ export const actions: Actions = {
                 note,
                 itemPriceId,
                 quantity,
+                optional,
                 mostWanted,
+                dependencies: {
+                    deleteMany: {},
+                    ...(sanitizedDependsOnIds.length > 0
+                        ? {
+                              createMany: {
+                                  data: sanitizedDependsOnIds.map((dependsOnId) => ({ dependsOnId }))
+                              }
+                          }
+                        : {})
+                },
                 lists: {
                     create: listItemsToCreate,
                     update: listItemsToUpdate,
@@ -257,4 +359,40 @@ const determineApprovalStatus = (config: Config, list: PartialList, user: LocalU
     }
 
     return list.managers.some(({ userId }) => userId === user.id);
+};
+
+const sanitizeDependencyIds = (dependencyIds: number[]) => {
+    return [...new Set(dependencyIds)];
+};
+
+const wouldCreateDependencyCycle = async (itemId: number, dependencyIds: number[]) => {
+    const seen = new Set<number>();
+    let frontier = [...dependencyIds];
+
+    while (frontier.length > 0) {
+        const checkIds = frontier.filter((id) => !seen.has(id));
+        if (checkIds.length === 0) {
+            return false;
+        }
+        checkIds.forEach((id) => seen.add(id));
+
+        const downstreamLinks = await client.itemDependency.findMany({
+            select: {
+                dependsOnId: true
+            },
+            where: {
+                itemId: {
+                    in: checkIds
+                }
+            }
+        });
+
+        if (downstreamLinks.some(({ dependsOnId }) => dependsOnId === itemId)) {
+            return true;
+        }
+
+        frontier = downstreamLinks.map(({ dependsOnId }) => dependsOnId);
+    }
+
+    return false;
 };

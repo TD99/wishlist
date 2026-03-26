@@ -7,7 +7,7 @@ import { createImage, isValidImage } from "$lib/server/image-util";
 import { itemEmitter } from "$lib/server/events/emitters";
 import { getMinorUnits } from "$lib/price-formatter";
 import { getFormatter, getLocale } from "$lib/server/i18n";
-import { getAvailableLists, getById, getNextDisplayOrderForLists } from "$lib/server/list";
+import { getAvailableLists, getById, getItems, getNextDisplayOrderForLists } from "$lib/server/list";
 import { ItemEvent } from "$lib/events";
 import { getItemInclusions } from "$lib/server/items";
 import { requireLogin } from "$lib/server/auth";
@@ -39,11 +39,27 @@ export const load: PageServerLoad = async ({ params }) => {
     }
 
     const lists = await getAvailableLists(list.owner.id, user.id);
+    const dependencyOptions = await getItems(list.id, {
+        filter: null,
+        requirement: null,
+        sort: null,
+        sortDir: null,
+        suggestionMethod: config.suggestions.method,
+        listOwnerId: list.owner.id,
+        listManagers: new Set(list.managers.map(({ userId }) => userId)),
+        loggedInUserId: user.id
+    });
 
     const isOwnerOrManager =
         list.owner.id === user.id || list.managers.find(({ userId }) => userId === user.id) !== undefined;
     return {
         lists,
+        dependencyOptions: dependencyOptions.map((item) => ({
+            id: item.id,
+            name: item.name,
+            optional: item.optional,
+            mostWanted: item.mostWanted
+        })),
         list: {
             id: list.id,
             owner: {
@@ -78,7 +94,20 @@ export const actions: Actions = {
             z.treeifyError(form.error);
             return fail(400, { errors: z.flattenError(form.error).fieldErrors });
         }
-        const { url, imageUrl, image, name, price, currency, quantity, note, lists: listIds, mostWanted } = form.data;
+        const {
+            url,
+            imageUrl,
+            image,
+            name,
+            price,
+            currency,
+            quantity,
+            note,
+            lists: listIds,
+            dependsOnIds,
+            optional,
+            mostWanted
+        } = form.data;
 
         let newImageFile: string | undefined | null;
         if (image && isValidImage(image)) {
@@ -117,7 +146,7 @@ export const actions: Actions = {
             }
         });
 
-        const nextDisplayOrderByList = await getNextDisplayOrderForLists(listIds, mostWanted);
+        const nextDisplayOrderByList = await getNextDisplayOrderForLists(listIds, mostWanted, optional);
 
         const listItems: Prisma.ListItemUncheckedCreateWithoutItemInput[] = await Promise.all(
             lists.map(async (l) => {
@@ -131,6 +160,28 @@ export const actions: Actions = {
             })
         );
 
+        const sanitizedDependsOnIds = sanitizeDependencyIds(dependsOnIds);
+        if (sanitizedDependsOnIds.length > 0) {
+            const dependencies = await client.item.findMany({
+                select: {
+                    id: true,
+                    optional: true
+                },
+                where: {
+                    id: {
+                        in: sanitizedDependsOnIds
+                    },
+                    userId: list.owner.id
+                }
+            });
+            if (dependencies.length !== sanitizedDependsOnIds.length) {
+                return fail(400, { errors: { dependsOnIds: [$t("errors.one-or-more-item-dependencies-invalid")] } });
+            }
+            if (dependencies.some((dependency) => dependency.optional !== optional)) {
+                return fail(400, { errors: { dependsOnIds: [$t("errors.one-or-more-item-dependencies-invalid")] } });
+            }
+        }
+
         const item = await client.item.create({
             data: {
                 userId: list.owner.id,
@@ -141,7 +192,17 @@ export const actions: Actions = {
                 createdById: user.id,
                 itemPriceId,
                 quantity,
+                optional,
                 mostWanted,
+                ...(sanitizedDependsOnIds.length > 0
+                    ? {
+                          dependencies: {
+                              createMany: {
+                                  data: sanitizedDependsOnIds.map((dependsOnId) => ({ dependsOnId }))
+                              }
+                          }
+                      }
+                    : {}),
                 lists: {
                     create: listItems
                 }
@@ -166,4 +227,8 @@ const determineApprovalStatus = (config: Config, list: PartialList, user: LocalU
     }
 
     return list.managers.some(({ userId }) => userId === user.id);
+};
+
+const sanitizeDependencyIds = (dependencyIds: number[]) => {
+    return [...new Set(dependencyIds)];
 };

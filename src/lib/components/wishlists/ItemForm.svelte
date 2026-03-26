@@ -20,18 +20,29 @@
         canModify: boolean;
     }
 
+    interface DependencyOption extends Pick<Item, "id" | "name" | "optional" | "mostWanted"> {}
+
     interface Props {
         item: Partial<Item> & {
             itemPrice?: ItemPrice | null;
             lists?: ExistingListProps[];
+            dependencyIds?: number[];
         };
         lists?: ListProps[];
+        dependencyOptions?: DependencyOption[];
         currentList?: string;
         buttonText: string;
         saving: boolean;
     }
 
-    let { item = $bindable(), buttonText, lists: otherLists = [], currentList, saving = false }: Props = $props();
+    let {
+        item = $bindable(),
+        buttonText,
+        lists: otherLists = [],
+        dependencyOptions = [],
+        currentList,
+        saving = false
+    }: Props = $props();
     const t = getFormatter();
 
     let productData = $state(item);
@@ -44,7 +55,10 @@
     let userCurrency: string = $derived(productData.itemPrice?.currency || defaultCurrency);
     let quantity = $state(item.quantity || 1);
     let unlimited = $state(item.quantity === null);
+    let isOptional = $state(Boolean(item.optional));
     let submitSrc = $state("submit");
+    let selectedDependencyIds = $derived(new Set(productData.dependencyIds || []));
+    let matchingDependencyOptions = $derived(dependencyOptions.filter((dependency) => dependency.optional === isOptional));
 
     const listsHavingItem = $derived.by(() => {
         return productData.lists
@@ -301,6 +315,14 @@
     </label>
 
     <div class="col-span-full">
+        <label class="checkbox-label w-fit" for="optional">
+            <input id="optional" name="optional" class="checkbox" type="checkbox" bind:checked={isOptional} />
+            <span>{$t("wishes.optional")}</span>
+        </label>
+        <span class="subtext">{$t("wishes.optional-description")}</span>
+    </div>
+
+    <div class="col-span-full">
         <label class="checkbox-label w-fit" for="mostWanted">
             <input id="mostWanted" name="mostWanted" class="checkbox" checked={item.mostWanted} type="checkbox" />
             <span>{$t("wishes.most-wanted")}</span>
@@ -312,6 +334,44 @@
         <span>{$t("wishes.notes")}</span>
         <MarkdownEditor id="note" name="note" placeholder={$t("wishes.note-placeholder")} value={productData.note} />
     </label>
+
+    <fieldset
+        class="col-span-full flex flex-col space-y-2"
+        class:hidden={matchingDependencyOptions.length === 0}
+        aria-labelledby="dependency-label"
+    >
+        <legend id="dependency-label">{$t("wishes.depends-on-items")}</legend>
+        <span class="subtext">{$t("wishes.depends-on-description")}</span>
+
+        <div
+            class="border-surface-500 rounded-container flex max-h-48 flex-col space-y-2 overflow-auto border p-2"
+            class:input-invalid={form?.errors?.dependsOnIds}
+        >
+            {#each matchingDependencyOptions as dependency (dependency.id)}
+                <label class="flex items-center gap-x-2" for={`depends-on-${dependency.id}`}>
+                    <input
+                        id={`depends-on-${dependency.id}`}
+                        name="dependsOnIds"
+                        class="checkbox"
+                        checked={selectedDependencyIds.has(dependency.id)}
+                        type="checkbox"
+                        value={dependency.id}
+                    />
+                    <div class="mt-0! flex min-w-0 flex-row items-center gap-x-2">
+                        <span class="truncate">
+                            {dependency.name}
+                        </span>
+                        <span class="text-xs opacity-70">
+                            ({dependency.optional ? $t("wishes.optional") : $t("wishes.required")})
+                        </span>
+                    </div>
+                </label>
+            {/each}
+        </div>
+        {#if form?.errors?.dependsOnIds}
+            <p class="text-invalid">{form.errors.dependsOnIds[0]}</p>
+        {/if}
+    </fieldset>
 
     <fieldset
         class="col-span-full flex flex-col space-y-2 md:col-span-5"

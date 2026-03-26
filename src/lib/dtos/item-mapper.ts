@@ -3,6 +3,7 @@ import type {
     Item,
     ListItem as PrismaListItem,
     ItemClaim as PrismaItemClaim,
+    ItemDependency as PrismaItemDependency,
     ItemPrice,
     User,
     SystemUser,
@@ -24,6 +25,10 @@ interface ListItem extends Pick<PrismaListItem, "listId" | "approved" | "display
     addedBy: MinimalUser;
 }
 
+interface ItemDependency extends Pick<PrismaItemDependency, "dependsOnId"> {
+    dependsOn: Pick<Item, "id" | "name" | "optional" | "mostWanted">;
+}
+
 interface ItemCount {
     lists: number;
 }
@@ -32,12 +37,13 @@ export interface FullItem extends Item {
     itemPrice: ItemPrice | null;
     user: MinimalUser;
     lists: ListItem[];
+    dependencies: ItemDependency[];
     claims: ItemClaim[];
     _count: ItemCount;
 }
 
 export const toItemOnListDTO = (item: FullItem, listId: string) => {
-    const { lists, claims, _count, ...restOfItem } = item;
+    const { lists, claims, dependencies, _count, ...restOfItem } = item;
     const list = lists.find((l) => l.listId === listId);
     if (!list) {
         throw new Error(`Couldn't find related list with id=${listId} on item with id=${item.id}`);
@@ -67,6 +73,7 @@ export const toItemOnListDTO = (item: FullItem, listId: string) => {
                 listId: claim.listId
             };
         }),
+        dependsOn: dependencies.map(({ dependsOn }) => dependsOn),
         listCount: _count.lists,
         get claimedQuantity(): number {
             return this.claims.map(({ quantity }) => quantity).reduce((a, b) => a + b, 0);

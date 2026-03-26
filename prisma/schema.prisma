@@ -125,6 +125,7 @@ model Item {
     note        String?
     imageUrl    String?
     quantity    Int?
+    optional    Boolean     @default(false)
     mostWanted  Boolean     @default(false)
     user        User        @relation(name: "MyItems", fields: [userId], references: [id], onDelete: Cascade)
     userId      String
@@ -132,9 +133,22 @@ model Item {
     createdById String
     lists       ListItem[]
     claims      ItemClaim[]
+    dependencies ItemDependency[] @relation("ItemDependsOn")
+    dependents   ItemDependency[] @relation("ItemRequiredBy")
 
     @@index([userId])
     @@map("items")
+}
+
+model ItemDependency {
+    item        Item @relation("ItemDependsOn", fields: [itemId], references: [id], onDelete: Cascade)
+    itemId      Int
+    dependsOn   Item @relation("ItemRequiredBy", fields: [dependsOnId], references: [id], onDelete: Cascade)
+    dependsOnId Int
+
+    @@id([itemId, dependsOnId])
+    @@index([dependsOnId])
+    @@map("item_dependency")
 }
 
 model ItemPrice {

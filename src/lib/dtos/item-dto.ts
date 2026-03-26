@@ -1,6 +1,7 @@
 import type { Item, ItemPrice, SystemUser, User } from "$lib/generated/prisma/client";
 
 type MinimalUser = Pick<User, "id" | "name">;
+export type DependencyItemDTO = Pick<Item, "id" | "name" | "optional" | "mostWanted">;
 
 interface UserWithGroups extends MinimalUser {
     groups: string[];
@@ -37,6 +38,7 @@ interface ListItem {
 export interface ItemOnListDTO extends Item, ListItem {
     itemPrice: ItemPrice | null;
     user: MinimalUser;
+    dependsOn: DependencyItemDTO[];
     listCount: number;
     readonly claimedQuantity: number;
     readonly remainingQuantity: number;
@@ -46,5 +48,6 @@ export interface ItemOnListDTO extends Item, ListItem {
 export interface ItemDTO extends Item {
     itemPrice: ItemPrice | null;
     user: MinimalUser;
+    dependsOn: DependencyItemDTO[];
     lists: ListItem[];
 }

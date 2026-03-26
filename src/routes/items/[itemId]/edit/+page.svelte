@@ -30,7 +30,13 @@
             };
         }}
     >
-        <ItemForm buttonText={$t("general.save")} item={data.item} lists={data.lists} {saving} />
+        <ItemForm
+            buttonText={$t("general.save")}
+            dependencyOptions={data.dependencyOptions}
+            item={data.item}
+            lists={data.lists}
+            {saving}
+        />
     </form>
 {/if}
 

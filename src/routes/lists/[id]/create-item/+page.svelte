@@ -11,7 +11,7 @@
     const { data }: PageProps = $props();
     const t = getFormatter();
 
-    let itemData: Pick<Item, "name" | "price" | "url" | "note" | "imageUrl"> = {
+    let itemData: (Pick<Item, "name" | "price" | "url" | "note" | "imageUrl"> & { dependencyIds?: number[] }) = {
         name: "",
         price: null,
         url: null,
@@ -32,20 +32,26 @@
             "image",
             "imageUrl",
             "note",
-            "unlimited"
+            "unlimited",
+            "optional",
+            "mostWanted"
         ];
         fieldIds.forEach((id) => {
             const field = document.getElementById(id) as HTMLInputElement;
             if (field) {
                 if (id === "quantity") {
                     field.value = "1";
-                } else if (id === "unlimited") {
+                } else if (id === "unlimited" || id === "optional" || id === "mostWanted") {
                     field.checked = false;
+                    field.dispatchEvent(new Event("change", { bubbles: true }));
                 } else {
                     field.value = "";
                 }
             }
         });
+        document
+            .querySelectorAll<HTMLInputElement>('input[name="dependsOnIds"]')
+            .forEach((checkbox) => (checkbox.checked = false));
     };
 </script>
 
@@ -88,6 +94,7 @@
     <ItemForm
         buttonText={$t("wishes.add-item")}
         currentList={data.list.id}
+        dependencyOptions={data.dependencyOptions}
         item={itemData}
         lists={data.lists}
         {saving}

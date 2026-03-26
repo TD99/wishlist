@@ -43,6 +43,18 @@ export const getItemInclusions = (listId?: string) => {
                 }
             }
         },
+        dependencies: {
+            select: {
+                dependsOn: {
+                    select: {
+                        id: true,
+                        name: true,
+                        optional: true,
+                        mostWanted: true
+                    }
+                }
+            }
+        },
         user: {
             select: {
                 id: true,

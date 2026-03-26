@@ -1,13 +1,15 @@
 import { init } from "@paralleldrive/cuid2";
 import { client } from "./prisma";
-import { claimFilter } from "./sort-filter-util";
+import { claimFilter, requirementFilter } from "./sort-filter-util";
 import { toItemOnListDTO } from "../dtos/item-mapper";
 import { getItemInclusions } from "./items";
 import type { Prisma } from "$lib/generated/prisma/client";
 import { getConfig } from "./config";
+import { orderItemsByDependencies } from "$lib/dependency-order";
 
 export interface GetItemsOptions {
     filter: string | null;
+    requirement: string | null;
     sort: string | null;
     sortDir: string | null;
     suggestionMethod: SuggestionMethod;
@@ -207,6 +209,7 @@ export const getItems = async (listId: string, options: GetItemsOptions) => {
         // need to filter out items not on a list because prisma generates a stupid query
         .filter((item) => item.lists.length > 0)
         .map((i) => toItemOnListDTO(i, list.id))
+        .filter(requirementFilter(options.requirement))
         .filter(claimFilter(options.filter, options.loggedInUserId));
 
     if (options.sort === "price") {
@@ -216,10 +219,16 @@ export const getItems = async (listId: string, options: GetItemsOptions) => {
             itemDTOs.sort((a, b) => (a.itemPrice?.value ?? Infinity) - (b.itemPrice?.value ?? Infinity));
         }
     } else {
-        itemDTOs.sort((a, b) => (a.displayOrder ?? Infinity) - (b.displayOrder ?? Infinity));
+        itemDTOs.sort((a, b) => {
+            if (a.optional !== b.optional) {
+                return a.optional ? 1 : -1;
+            }
+            return (a.displayOrder ?? Infinity) - (b.displayOrder ?? Infinity);
+        });
     }
-
-    return itemDTOs;
+    const requiredItems = orderItemsByDependencies(itemDTOs.filter((item) => !item.optional)).items;
+    const optionalItems = orderItemsByDependencies(itemDTOs.filter((item) => item.optional)).items;
+    return [...requiredItems, ...optionalItems];
 };
 
 const availableListSelection: Prisma.ListFindManyArgs["select"] = {
@@ -309,7 +318,7 @@ export const getAvailableLists = async (ownerId: string, loggedInUserId: string)
     return listsAvailable;
 };
 
-export const getNextDisplayOrderForLists = async (listIds: string[], mostWanted = false) => {
+export const getNextDisplayOrderForLists = async (listIds: string[], mostWanted = false, optional = false) => {
     if (mostWanted) {
         return listIds.reduce(
             (accum, listId) => {
@@ -330,6 +339,9 @@ export const getNextDisplayOrderForLists = async (listIds: string[], mostWanted 
             where: {
                 listId: {
                     in: listIds
+                },
+                item: {
+                    optional
                 }
             }
         });

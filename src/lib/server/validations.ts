@@ -140,13 +140,19 @@ export const getItemCreateSchema = async () => {
             .transform((v) => (v === undefined ? null : v)),
         imageUrl: z.string().optional(),
         image: z.instanceof(File).optional(),
+        optional: z.coerce.boolean().default(false),
         mostWanted: z.coerce.boolean().default(false),
         note: z.string().optional(),
         lists: z
             .union([z.string(), z.tuple([z.string()], z.string())], {
                 error: $t("errors.an-item-must-be-added-to-at-least-one-list")
             })
-            .transform((v) => (typeof v === "string" ? [v] : v))
+            .transform((v) => (typeof v === "string" ? [v] : v)),
+        dependsOnIds: z
+            .union([z.string(), z.tuple([z.string()], z.string())])
+            .optional()
+            .transform((v) => (v === undefined ? [] : typeof v === "string" ? [v] : v))
+            .pipe(z.array(z.coerce.number().int().positive()))
     });
 };
 

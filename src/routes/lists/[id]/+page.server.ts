@@ -36,6 +36,7 @@ export const load = (async ({ params, url, locals, depends, cookies }) => {
 
     const options: GetItemsOptions = {
         filter: url.searchParams.get("filter"),
+        requirement: url.searchParams.get("requirement"),
         sort: url.searchParams.get("sort"),
         sortDir: url.searchParams.get("dir"),
         suggestionMethod: config.suggestions.method,

@@ -2,6 +2,7 @@
     import type { PageProps } from "./$types";
     import ItemCard from "$lib/components/wishlists/ItemCard/ItemCard.svelte";
     import ClaimFilterChip from "$lib/components/wishlists/chips/ClaimFilter.svelte";
+    import RequirementFilterChip from "$lib/components/wishlists/chips/RequirementFilter.svelte";
     import { goto, invalidate } from "$app/navigation";
     import { page } from "$app/state";
     import { onMount } from "svelte";
@@ -26,6 +27,7 @@
     import ListStatistics from "$lib/components/wishlists/ListStatistics.svelte";
     import type { ActionReturn } from "svelte/action";
     import { toaster } from "$lib/components/toaster";
+    import { orderItemsByDependencies } from "$lib/dependency-order";
 
     const { data }: PageProps = $props();
     const t = getFormatter();
@@ -36,6 +38,11 @@
     let publicListUrl: URL | undefined = $state();
     let approvals = $derived(allItems.filter((item) => !item.approved));
     let items = $derived(allItems.filter((item) => item.approved));
+    let requiredOrdering = $derived(orderItemsByDependencies(items.filter((item) => !item.optional)));
+    let optionalOrdering = $derived(orderItemsByDependencies(items.filter((item) => item.optional)));
+    let requiredItems = $derived(requiredOrdering.items);
+    let optionalItems = $derived(optionalOrdering.items);
+    let showRequirementSections = $derived(requiredItems.length > 0 && optionalItems.length > 0);
     let listName = $derived.by(() => {
         if (data.list.name) {
             return data.list.name;
@@ -87,11 +94,21 @@
         allItems = data.list.items;
     });
 
-    const updateDisplayOrder = (items: ItemOnListDTO[]) => {
-        items.forEach((it, idx) => (it.displayOrder = idx));
+    const setApprovedItems = (updatedApprovedItems: ItemOnListDTO[]) => {
+        const unapprovedItems = allItems.filter((item) => !item.approved);
+        allItems = [...unapprovedItems, ...updatedApprovedItems];
     };
 
-    const groupItems = (items: ItemOnListDTO[]) => {
+    const updateDisplayOrder = (approvedItems: ItemOnListDTO[]) => {
+        approvedItems
+            .filter((item) => !item.optional)
+            .forEach((item, idx) => (item.displayOrder = idx));
+        approvedItems
+            .filter((item) => item.optional)
+            .forEach((item, idx) => (item.displayOrder = idx));
+    };
+
+    const groupByClaimState = (items: ItemOnListDTO[]) => {
         // When on own list, don't separate out claimed vs un-claimed
         if (data.list.owner.isMe) {
             return [items, []];
@@ -108,6 +125,22 @@
             },
             [[], []] as ItemOnListDTO[][]
         );
+    };
+
+    const mergeApprovedItems = (required: ItemOnListDTO[], optional: ItemOnListDTO[]) => {
+        const merged = [...required, ...optional];
+        updateDisplayOrder(merged);
+        setApprovedItems(merged);
+    };
+
+    const updateOptionalGroup = (optional: boolean, updatedGroup: ItemOnListDTO[]) => {
+        const approvedItems = allItems.filter((item) => item.approved);
+        const otherGroup = approvedItems.filter((item) => item.optional !== optional);
+        if (optional) {
+            mergeApprovedItems(otherGroup, updatedGroup);
+        } else {
+            mergeApprovedItems(updatedGroup, otherGroup);
+        }
     };
 
     const updateHash = async () => {
@@ -190,71 +223,82 @@
             destroy: zone.destroy
         };
     }
-    const handleDnd = (e: CustomEvent) => {
-        allItems = e.detail.items;
-        updateDisplayOrder(allItems);
+    const handleDnd = (optional: boolean, e: CustomEvent<{ items: ItemOnListDTO[] }>) => {
+        updateOptionalGroup(optional, e.detail.items);
     };
-    const swap = (arr: ItemOnListDTO[], a: number, b: number) => {
+
+    const getDependencyLevel = (item: ItemOnListDTO) => {
+        return item.optional ? (optionalOrdering.levels.get(item.id) ?? 0) : (requiredOrdering.levels.get(item.id) ?? 0);
+    };
+    const swap = (arr: ItemOnListDTO[], a: number, b: number): ItemOnListDTO[] => {
         const swapped = arr.with(a, arr[b]).with(b, arr[a]);
-        updateDisplayOrder(swapped);
         return swapped;
     };
     const handleIncreasePriority = (itemId: number) => {
-        const itemIdx = allItems.findIndex((item) => item.id === itemId);
+        const item = items.find((it) => it.id === itemId);
+        if (!item) {
+            return;
+        }
+        const groupedItems = item.optional ? optionalItems : requiredItems;
+        const itemIdx = groupedItems.findIndex((it) => it.id === itemId);
         if (itemIdx > 0) {
-            allItems = swap(allItems, itemIdx, itemIdx - 1);
+            updateOptionalGroup(item.optional, swap(groupedItems, itemIdx, itemIdx - 1));
         }
     };
     const handleDecreasePriority = (itemId: number) => {
-        const itemIdx = allItems.findIndex((item) => item.id === itemId);
-        if (itemIdx < allItems.length - 1) {
-            allItems = swap(allItems, itemIdx, itemIdx + 1);
+        const item = items.find((it) => it.id === itemId);
+        if (!item) {
+            return;
+        }
+        const groupedItems = item.optional ? optionalItems : requiredItems;
+        const itemIdx = groupedItems.findIndex((it) => it.id === itemId);
+        if (itemIdx < groupedItems.length - 1) {
+            updateOptionalGroup(item.optional, swap(groupedItems, itemIdx, itemIdx + 1));
         }
     };
     const handlePriorityInput = (item: ItemOnListDTO, idxString: string) => {
+        const groupedItems = item.optional ? optionalItems : requiredItems;
         const targetIdx = Number.parseInt(idxString) - 1;
-        const currentIdx = allItems.findIndex((it) => it.id === item.id);
+        const currentIdx = groupedItems.findIndex((it) => it.id === item.id);
 
-        if (Number.isNaN(targetIdx) || targetIdx < 0 || targetIdx > allItems.length - 1) {
+        if (Number.isNaN(targetIdx) || targetIdx < 0 || targetIdx > groupedItems.length - 1) {
             toaster.error({
-                description: $t("errors.display-order-invalid", { values: { min: 1, max: allItems.length } })
+                description: $t("errors.display-order-invalid", { values: { min: 1, max: groupedItems.length } })
             });
-            if (item.displayOrder) {
-                const el = document.getElementById(`${item.id}-displayOrder`) as HTMLInputElement;
-                el.value = (item.displayOrder + 1).toString();
-            }
+            const el = document.getElementById(`${item.id}-displayOrder`) as HTMLInputElement;
+            el.value = ((item.displayOrder ?? 0) + 1).toString();
             return;
         }
         if (currentIdx !== targetIdx) {
             const resortedItems: ItemOnListDTO[] = [];
             let displayOrder = 0;
-            for (let i = 0; i < allItems.length; i++) {
+            for (let i = 0; i < groupedItems.length; i++) {
                 if (i === currentIdx) {
                     continue;
                 }
                 if (i === targetIdx) {
                     if (targetIdx < currentIdx) {
-                        resortedItems.push(allItems[currentIdx]);
-                        resortedItems.push(allItems[i]);
+                        resortedItems.push(groupedItems[currentIdx]);
+                        resortedItems.push(groupedItems[i]);
                     } else {
-                        resortedItems.push(allItems[i]);
-                        resortedItems.push(allItems[currentIdx]);
+                        resortedItems.push(groupedItems[i]);
+                        resortedItems.push(groupedItems[currentIdx]);
                     }
 
                     resortedItems.at(-2)!.displayOrder = displayOrder++;
                 } else {
-                    resortedItems.push(allItems[i]);
+                    resortedItems.push(groupedItems[i]);
                 }
                 resortedItems.at(-1)!.displayOrder = displayOrder++;
             }
-            allItems = resortedItems;
+            updateOptionalGroup(item.optional, resortedItems);
         }
     };
     const handleReorderFinalize = async () => {
         reordering = false;
-        const displayOrderUpdate = allItems.map((item, idx) => ({
+        const displayOrderUpdate = items.map((item) => ({
             itemId: item.id,
-            displayOrder: idx
+            displayOrder: item.displayOrder ?? 0
         }));
         const response = await listAPI.updateItems(displayOrderUpdate);
         if (!response.ok) {
@@ -281,6 +325,7 @@
 <!-- chips -->
 <div class="flex flex-wrap items-end justify-between gap-2 pb-4 print:hidden">
     <div class="flex flex-row flex-wrap items-end gap-2">
+        <RequirementFilterChip />
         {#if !data.list.owner.isMe}
             <ClaimFilterChip />
         {/if}
@@ -352,67 +397,173 @@
         <p class="text-2xl">{$t("wishes.no-wishes-yet")}</p>
     </div>
 {:else}
-    <!-- items -->
-    <div
-        class={isTileView
-            ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
-            : "flex flex-col space-y-4"}
-        data-testid="items-container"
-        onconsider={handleDnd}
-        onfinalize={handleDnd}
-        use:dndZone={{
-            items,
-            flipDurationMs,
-            dragDisabled: false,
-            dropTargetClasses: ["preset-outlined-primary-500"],
-            dropTargetStyle: {}
-        }}
-    >
-        <!-- Workaround for svelte-dnd not playing nicely with transitions -->
-        {#if reordering}
-            {#each items as item (item.id)}
-                <div animate:flip={{ duration: flipDurationMs }}>
-                    <ItemCard
-                        groupId={data.list.groupId}
-                        {isTileView}
-                        {item}
-                        onDecreasePriority={handleDecreasePriority}
-                        onIncreasePriority={handleIncreasePriority}
-                        onPriorityChange={handlePriorityInput}
-                        onPublicList={!data.loggedInUser && data.list.public}
-                        reorderActions
-                        requireClaimEmail={data.requireClaimEmail}
-                        showClaimForOwner={data.showClaimForOwner}
-                        showClaimedName={data.showClaimedName}
-                        showNameAcrossGroups={data.showNameAcrossGroups}
-                        user={data.loggedInUser}
-                        userCanManage={data.list.isManager}
-                    />
-                </div>
-            {/each}
-        {:else}
-            {#each groupItems(items) as groupedItems}
-                {#each groupedItems as item (item.id)}
+    <div data-testid="items-container">
+        {#if requiredItems.length > 0}
+            <section class={["pb-4", showRequirementSections && "rounded-container border-surface-500 border p-3"]}>
+                {#if showRequirementSections}
+                    <h2 class="h3 pb-3">{$t("wishes.required")}</h2>
+                {/if}
+                {#if reordering}
                     <div
-                        in:receive={{ key: item.id }}
-                        out:send|local={{ key: item.id }}
-                        animate:flip={{ duration: flipDurationMs }}
+                        class={isTileView
+                            ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+                            : "flex flex-col space-y-4"}
+                        data-testid="required-items-container"
+                        onconsider={(e) => handleDnd(false, e)}
+                        onfinalize={(e) => handleDnd(false, e)}
+                        use:dndZone={{
+                            items: requiredItems,
+                            flipDurationMs,
+                            dragDisabled: false,
+                            dropTargetClasses: ["preset-outlined-primary-500"],
+                            dropTargetStyle: {}
+                        }}
                     >
-                        <ItemCard
-                            groupId={data.list.groupId}
-                            {isTileView}
-                            {item}
-                            onPublicList={!data.loggedInUser && data.list.public}
-                            requireClaimEmail={data.requireClaimEmail}
-                            showClaimForOwner={data.showClaimForOwner}
-                            showClaimedName={data.showClaimedName}
-                            showNameAcrossGroups={data.showNameAcrossGroups}
-                            user={data.loggedInUser}
-                            userCanManage={data.list.isManager}
-                        />
+                        {#each requiredItems as item (item.id)}
+                            <div
+                                class={!isTileView ? "dependency-node" : undefined}
+                                data-dependency-level={!isTileView ? getDependencyLevel(item) : undefined}
+                                style={!isTileView ? `--dependency-level:${getDependencyLevel(item)};` : undefined}
+                                animate:flip={{ duration: flipDurationMs }}
+                            >
+                                <ItemCard
+                                    groupId={data.list.groupId}
+                                    {isTileView}
+                                    {item}
+                                    onDecreasePriority={handleDecreasePriority}
+                                    onIncreasePriority={handleIncreasePriority}
+                                    onPriorityChange={handlePriorityInput}
+                                    onPublicList={!data.loggedInUser && data.list.public}
+                                    reorderActions
+                                    requireClaimEmail={data.requireClaimEmail}
+                                    showClaimForOwner={data.showClaimForOwner}
+                                    showClaimedName={data.showClaimedName}
+                                    showNameAcrossGroups={data.showNameAcrossGroups}
+                                    user={data.loggedInUser}
+                                    userCanManage={data.list.isManager}
+                                />
+                            </div>
+                        {/each}
                     </div>
-                {/each}
-            {/each}
+                {:else}
+                    <div
+                        class={isTileView
+                            ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+                            : "flex flex-col space-y-4"}
+                        data-testid="required-items-container"
+                    >
+                        {#each groupByClaimState(requiredItems) as groupedItems}
+                            {#each groupedItems as item (item.id)}
+                                <div
+                                    class={!isTileView ? "dependency-node" : undefined}
+                                    data-dependency-level={!isTileView ? getDependencyLevel(item) : undefined}
+                                    style={!isTileView ? `--dependency-level:${getDependencyLevel(item)};` : undefined}
+                                    in:receive={{ key: item.id }}
+                                    out:send|local={{ key: item.id }}
+                                    animate:flip={{ duration: flipDurationMs }}
+                                >
+                                    <ItemCard
+                                        groupId={data.list.groupId}
+                                        {isTileView}
+                                        {item}
+                                        onPublicList={!data.loggedInUser && data.list.public}
+                                        requireClaimEmail={data.requireClaimEmail}
+                                        showClaimForOwner={data.showClaimForOwner}
+                                        showClaimedName={data.showClaimedName}
+                                        showNameAcrossGroups={data.showNameAcrossGroups}
+                                        user={data.loggedInUser}
+                                        userCanManage={data.list.isManager}
+                                    />
+                                </div>
+                            {/each}
+                        {/each}
+                    </div>
+                {/if}
+            </section>
+        {/if}
+
+        {#if optionalItems.length > 0}
+            <section class={["pb-4", showRequirementSections && "rounded-container border-surface-500 border p-3"]}>
+                {#if showRequirementSections}
+                    <h2 class="h3 pb-3">{$t("wishes.optional")}</h2>
+                {/if}
+                {#if reordering}
+                    <div
+                        class={isTileView
+                            ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+                            : "flex flex-col space-y-4"}
+                        data-testid="optional-items-container"
+                        onconsider={(e) => handleDnd(true, e)}
+                        onfinalize={(e) => handleDnd(true, e)}
+                        use:dndZone={{
+                            items: optionalItems,
+                            flipDurationMs,
+                            dragDisabled: false,
+                            dropTargetClasses: ["preset-outlined-primary-500"],
+                            dropTargetStyle: {}
+                        }}
+                    >
+                        {#each optionalItems as item (item.id)}
+                            <div
+                                class={!isTileView ? "dependency-node" : undefined}
+                                data-dependency-level={!isTileView ? getDependencyLevel(item) : undefined}
+                                style={!isTileView ? `--dependency-level:${getDependencyLevel(item)};` : undefined}
+                                animate:flip={{ duration: flipDurationMs }}
+                            >
+                                <ItemCard
+                                    groupId={data.list.groupId}
+                                    {isTileView}
+                                    {item}
+                                    onDecreasePriority={handleDecreasePriority}
+                                    onIncreasePriority={handleIncreasePriority}
+                                    onPriorityChange={handlePriorityInput}
+                                    onPublicList={!data.loggedInUser && data.list.public}
+                                    reorderActions
+                                    requireClaimEmail={data.requireClaimEmail}
+                                    showClaimForOwner={data.showClaimForOwner}
+                                    showClaimedName={data.showClaimedName}
+                                    showNameAcrossGroups={data.showNameAcrossGroups}
+                                    user={data.loggedInUser}
+                                    userCanManage={data.list.isManager}
+                                />
+                            </div>
+                        {/each}
+                    </div>
+                {:else}
+                    <div
+                        class={isTileView
+                            ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+                            : "flex flex-col space-y-4"}
+                        data-testid="optional-items-container"
+                    >
+                        {#each groupByClaimState(optionalItems) as groupedItems}
+                            {#each groupedItems as item (item.id)}
+                                <div
+                                    class={!isTileView ? "dependency-node" : undefined}
+                                    data-dependency-level={!isTileView ? getDependencyLevel(item) : undefined}
+                                    style={!isTileView ? `--dependency-level:${getDependencyLevel(item)};` : undefined}
+                                    in:receive={{ key: item.id }}
+                                    out:send|local={{ key: item.id }}
+                                    animate:flip={{ duration: flipDurationMs }}
+                                >
+                                    <ItemCard
+                                        groupId={data.list.groupId}
+                                        {isTileView}
+                                        {item}
+                                        onPublicList={!data.loggedInUser && data.list.public}
+                                        requireClaimEmail={data.requireClaimEmail}
+                                        showClaimForOwner={data.showClaimForOwner}
+                                        showClaimedName={data.showClaimedName}
+                                        showNameAcrossGroups={data.showNameAcrossGroups}
+                                        user={data.loggedInUser}
+                                        userCanManage={data.list.isManager}
+                                    />
+                                </div>
+                            {/each}
+                        {/each}
+                    </div>
+                {/if}
+            </section>
         {/if}
     </div>
 
@@ -438,3 +589,14 @@
 <svelte:head>
     <title>{listName}</title>
 </svelte:head>
+
+<style>
+    .dependency-node {
+        margin-left: calc(min(var(--dependency-level, 0), 5) * 1rem);
+    }
+
+    .dependency-node[data-dependency-level]:not([data-dependency-level="0"]) {
+        border-left: 2px solid color-mix(in oklab, var(--color-primary-500) 20%, transparent);
+        padding-left: 0.5rem;
+    }
+</style>
