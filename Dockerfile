@@ -62,7 +62,9 @@ COPY ["package.json", "pnpm-lock.yaml", "entrypoint.sh", "prisma.config.ts", "Ca
 COPY ./templates/ ./templates
 COPY ./prisma/ ./prisma/
 
-RUN chmod +x entrypoint.sh && chmod +x /usr/bin/caddy
+RUN sed -i 's/\r$//' entrypoint.sh \
+    && chmod +x entrypoint.sh \
+    && chmod +x /usr/bin/caddy
 
 COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/build ./build/
