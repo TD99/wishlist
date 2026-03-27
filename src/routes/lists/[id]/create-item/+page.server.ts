@@ -67,6 +67,7 @@ export const load: PageServerLoad = async ({ params }) => {
                 isMe: isOwnerOrManager
             }
         },
+        listPricePollingEnabled: list.pricePollingEnabled,
         suggestion: !isOwnerOrManager,
         suggestionMethod: config.suggestions.method
     };
@@ -106,7 +107,8 @@ export const actions: Actions = {
             lists: listIds,
             dependsOnIds,
             optional,
-            mostWanted
+            mostWanted,
+            disablePricePolling
         } = form.data;
 
         let newImageFile: string | undefined | null;
@@ -133,6 +135,7 @@ export const actions: Actions = {
                 id: true,
                 ownerId: true,
                 groupId: true,
+                pricePollingEnabled: true,
                 managers: {
                     select: {
                         userId: true
@@ -147,6 +150,8 @@ export const actions: Actions = {
         });
 
         const nextDisplayOrderByList = await getNextDisplayOrderForLists(listIds, mostWanted, optional);
+        const hasPollingEnabledList = lists.some((selectedList) => selectedList.pricePollingEnabled);
+        const itemPricePollingEnabled = hasPollingEnabledList && !disablePricePolling;
 
         const listItems: Prisma.ListItemUncheckedCreateWithoutItemInput[] = await Promise.all(
             lists.map(async (l) => {
@@ -194,6 +199,8 @@ export const actions: Actions = {
                 quantity,
                 optional,
                 mostWanted,
+                pricePollingEnabled: itemPricePollingEnabled,
+                nextPricePollAt: itemPricePollingEnabled && url ? new Date() : null,
                 ...(sanitizedDependsOnIds.length > 0
                     ? {
                           dependencies: {

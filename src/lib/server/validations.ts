@@ -102,6 +102,8 @@ export const getListPropertiesSchema = () => {
         icon: z.string().trim().nullable(),
         iconColor: z.string().trim().nullable(),
         public: z.coerce.boolean().default(false),
+        pricePollingEnabled: z.coerce.boolean().default(false),
+        pollIntervalMinutes: z.coerce.number().int().min(60).default(720),
         description: z.string().max(10000).nullable(),
         managers: z.string().array().nullable().default([])
     });
@@ -144,6 +146,7 @@ export const getItemCreateSchema = async () => {
         image: z.instanceof(File).optional(),
         optional: z.coerce.boolean().default(false),
         mostWanted: z.coerce.boolean().default(false),
+        disablePricePolling: z.coerce.boolean().default(false),
         note: z.string().optional(),
         lists: z
             .union([z.string(), z.tuple([z.string()], z.string())], {

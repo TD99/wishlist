@@ -11,7 +11,9 @@
     import ConfirmModal from "../modals/ConfirmModal.svelte";
     import SelectListManagerModal from "../modals/SelectListManagerModal.svelte";
 
-    interface ListProps extends Partial<Pick<List, "id" | "icon" | "iconColor" | "name" | "public" | "description">> {
+interface ListProps
+        extends Partial<Pick<List, "id" | "icon" | "iconColor" | "name" | "public" | "description" | "pricePollingEnabled">> {
+        pricePollIntervalMinutes: number;
         owner: Pick<User, "id" | "name" | "username" | "picture">;
         managers: Pick<User, "id" | "name" | "username">[];
     }
@@ -130,6 +132,45 @@
                 value={list.description}
             />
         </div>
+
+        <div class="label col-span-full md:col-span-4">
+            <label class="checkbox-label w-fit" for="pricePollingEnabled">
+                <input
+                    id="pricePollingEnabled"
+                    name="pricePollingEnabled"
+                    class="checkbox"
+                    type="checkbox"
+                    bind:checked={list.pricePollingEnabled}
+                />
+                <span>{$t("wishes.enable-price-polling")}</span>
+            </label>
+            <span class="subtext">{$t("wishes.enable-price-polling-help")}</span>
+        </div>
+
+        <label class="label col-span-full md:col-span-4" for="pollIntervalMinutes">
+            <span>{$t("wishes.price-poll-interval")}</span>
+            <div class="input-group grid-cols-[auto_1fr]">
+                <div class="ig-cell preset-tonal">
+                    <iconify-icon icon="ion:time"></iconify-icon>
+                </div>
+                <input
+                    id="pollIntervalMinutes"
+                    name="pollIntervalMinutes"
+                    class="ig-input"
+                    disabled={!list.pricePollingEnabled}
+                    inputmode="numeric"
+                    min="60"
+                    required
+                    step="60"
+                    type="number"
+                    bind:value={list.pricePollIntervalMinutes}
+                />
+            </div>
+            {#if !list.pricePollingEnabled}
+                <input name="pollIntervalMinutes" type="hidden" value={list.pricePollIntervalMinutes} />
+            {/if}
+            <span class="subtext">{$t("wishes.price-poll-interval-help")}</span>
+        </label>
 
         <fieldset
             class="col-span-full flex min-w-0 flex-col space-y-2 md:col-span-5"

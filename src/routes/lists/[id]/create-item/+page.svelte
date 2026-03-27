@@ -11,12 +11,15 @@
     const { data }: PageProps = $props();
     const t = getFormatter();
 
-    let itemData: (Pick<Item, "name" | "price" | "url" | "note" | "imageUrl"> & { dependencyIds?: number[] }) = {
+    let itemData: (Pick<Item, "name" | "price" | "url" | "note" | "imageUrl" | "pricePollingEnabled"> & {
+        dependencyIds?: number[];
+    }) = {
         name: "",
         price: null,
         url: null,
         note: null,
-        imageUrl: null
+        imageUrl: null,
+        pricePollingEnabled: false
     };
 
     let warningHidden = $state(false);
@@ -34,13 +37,17 @@
             "note",
             "unlimited",
             "optional",
-            "mostWanted"
+            "mostWanted",
+            "disablePricePolling"
         ];
         fieldIds.forEach((id) => {
             const field = document.getElementById(id) as HTMLInputElement;
             if (field) {
                 if (id === "quantity") {
                     field.value = "1";
+                } else if (id === "disablePricePolling") {
+                    field.checked = false;
+                    field.dispatchEvent(new Event("change", { bubbles: true }));
                 } else if (id === "unlimited" || id === "optional" || id === "mostWanted") {
                     field.checked = false;
                     field.dispatchEvent(new Event("change", { bubbles: true }));
@@ -95,8 +102,10 @@
         buttonText={$t("wishes.add-item")}
         currentList={data.list.id}
         dependencyOptions={data.dependencyOptions}
+        itemPollingDisabled={false}
         item={itemData}
         lists={data.lists}
+        showItemPollingDisable={data.listPricePollingEnabled}
         {saving}
     />
 </form>

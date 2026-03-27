@@ -11,6 +11,7 @@ import { requireLogin } from "$lib/server/auth";
 import { logger } from "$lib/server/logger";
 import z from "zod";
 import { deleteAllListShareLinks } from "$lib/server/share-link";
+import { alignListPollingSchedule } from "$lib/server/price-polling";
 
 export const load: PageServerLoad = async ({ params }) => {
     const user = requireLogin();
@@ -30,6 +31,8 @@ export const load: PageServerLoad = async ({ params }) => {
                 icon: true,
                 iconColor: true,
                 public: true,
+                pricePollingEnabled: true,
+                pricePollIntervalMinutes: true,
                 owner: {
                     select: {
                         id: true,
@@ -91,6 +94,8 @@ export const actions: Actions = {
             icon: form.get("icon"),
             iconColor: form.get("iconColor"),
             public: form.get("public"),
+            pricePollingEnabled: form.get("pricePollingEnabled"),
+            pollIntervalMinutes: form.get("pollIntervalMinutes"),
             description: form.get("description"),
             managers: form.getAll("managers")
         });
@@ -118,6 +123,8 @@ export const actions: Actions = {
                     icon: trimToNull(listProperties.data.icon),
                     iconColor: trimToNull(listProperties.data.iconColor),
                     public: listProperties.data.public,
+                    pricePollingEnabled: listProperties.data.pricePollingEnabled,
+                    pricePollIntervalMinutes: listProperties.data.pollIntervalMinutes,
                     publicShareTokenHash: listProperties.data.public ? undefined : null,
                     publicShareTokenCreatedAt: listProperties.data.public ? undefined : null,
                     description: trimToNull(listProperties.data.description)
@@ -129,6 +136,11 @@ export const actions: Actions = {
             if (!listProperties.data.public) {
                 await deleteAllListShareLinks(params.id);
             }
+            await alignListPollingSchedule(
+                params.id,
+                listProperties.data.pollIntervalMinutes,
+                listProperties.data.pricePollingEnabled
+            );
 
             const managers = listProperties.data.managers;
             if (managers) {

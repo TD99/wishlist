@@ -32,6 +32,8 @@ export const load = (async () => {
         list: {
             name: null,
             icon: null,
+            pricePollingEnabled: true,
+            pricePollIntervalMinutes: 720,
             owner: {
                 id: user.id,
                 name: user.name,
@@ -76,6 +78,8 @@ export const actions: Actions = {
             icon: form.get("icon"),
             iconColor: form.get("iconColor"),
             public: form.get("public"),
+            pricePollingEnabled: form.get("pricePollingEnabled"),
+            pollIntervalMinutes: form.get("pollIntervalMinutes"),
             description: form.get("description")
         });
         if (listProperties.error) {
@@ -102,6 +106,8 @@ export const actions: Actions = {
                 icon: trimToNull(listProperties.data.icon),
                 iconColor: trimToNull(listProperties.data.iconColor),
                 public: listProperties.data.public,
+                pricePollingEnabled: listProperties.data.pricePollingEnabled,
+                pricePollIntervalMinutes: listProperties.data.pollIntervalMinutes,
                 description: trimToNull(listProperties.data.description)
             };
             list = await create(user.id, activeMembership.groupId, data);

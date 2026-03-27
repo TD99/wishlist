@@ -100,6 +100,8 @@ model List {
     items       ListItem[]
     claims      ItemClaim[]
     description String?
+    pricePollingEnabled Boolean @default(true)
+    pricePollIntervalMinutes Int @default(720)
 
     @@index([ownerId])
     @@index([groupId])
@@ -155,17 +157,34 @@ model Item {
     quantity    Int?
     optional    Boolean     @default(false)
     mostWanted  Boolean     @default(false)
+    pricePollingEnabled Boolean @default(false)
+    nextPricePollAt DateTime?
+    lastPricePolledAt DateTime?
     user        User        @relation(name: "MyItems", fields: [userId], references: [id], onDelete: Cascade)
     userId      String
     createdBy   User        @relation(name: "CreatedItems", fields: [createdById], references: [id], onDelete: Cascade)
     createdById String
     lists       ListItem[]
     claims      ItemClaim[]
+    priceHistory ItemPriceHistory[]
     dependencies ItemDependency[] @relation("ItemDependsOn")
     dependents   ItemDependency[] @relation("ItemRequiredBy")
 
     @@index([userId])
+    @@index([pricePollingEnabled, nextPricePollAt])
     @@map("items")
+}
+
+model ItemPriceHistory {
+    id        String   @id @unique @default(uuid())
+    item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+    itemId    Int
+    value     Int
+    currency  String
+    polledAt  DateTime @default(now())
+
+    @@index([itemId, polledAt])
+    @@map("item_price_history")
 }
 
 model ItemDependency {

@@ -114,4 +114,8 @@ export class ListItemAPI {
     claimPublic = async (publicClaimedById: string, quantity: number) => {
         return await this._makeRequest("PUT", "/claims", { publicClaimedById, quantity });
     };
+
+    getPriceHistory = async () => {
+        return await this._makeRequest("GET", "/price-history");
+    };
 }

@@ -33,6 +33,8 @@
         currentList?: string;
         buttonText: string;
         saving: boolean;
+        showItemPollingDisable?: boolean;
+        itemPollingDisabled?: boolean;
     }
 
     let {
@@ -41,7 +43,9 @@
         lists: otherLists = [],
         dependencyOptions = [],
         currentList,
-        saving = false
+        saving = false,
+        showItemPollingDisable = false,
+        itemPollingDisabled = false
     }: Props = $props();
     const t = getFormatter();
 
@@ -56,6 +60,7 @@
     let quantity = $state(item.quantity || 1);
     let unlimited = $state(item.quantity === null);
     let isOptional = $state(Boolean(item.optional));
+    let disablePricePolling = $state(false);
     let submitSrc = $state("submit");
     let selectedDependencyIds = $derived(new Set(productData.dependencyIds || []));
     let matchingDependencyOptions = $derived(dependencyOptions.filter((dependency) => dependency.optional === isOptional));
@@ -170,6 +175,11 @@
     const selectAll = () => {
         document.getElementsByName("lists").forEach((el) => ((el as HTMLInputElement).checked = true));
     };
+
+    $effect(() => {
+        disablePricePolling = itemPollingDisabled;
+    });
+
 </script>
 
 <div class="grid grid-cols-7 gap-4">
@@ -249,6 +259,25 @@
         <span>{$t("wishes.price")}</span>
         <CurrencyInput id="price" name="price" currency={userCurrency} bind:value={price} />
     </label>
+
+    {#if showItemPollingDisable}
+        <div class="label col-span-full sm:col-span-3 xl:col-span-2">
+            <label class="checkbox-label w-fit" for="disablePricePolling">
+                <input
+                    id="disablePricePolling"
+                    name="disablePricePolling"
+                    class="checkbox"
+                    type="checkbox"
+                    bind:checked={disablePricePolling}
+                />
+                <span>{$t("wishes.disable-price-polling")}</span>
+            </label>
+            <span class="subtext">{$t("wishes.disable-price-polling-help")}</span>
+            {#if form?.errors?.disablePricePolling}
+                <p class="text-invalid">{form.errors.disablePricePolling[0]}</p>
+            {/if}
+        </div>
+    {/if}
 
     <div class="label col-span-full sm:col-span-3 xl:col-span-2">
         <label class="pb-1" for="quantity">

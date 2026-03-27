@@ -23,6 +23,8 @@ export interface ListProperties {
     icon?: string | null;
     iconColor?: string | null;
     public?: boolean;
+    pricePollingEnabled?: boolean;
+    pricePollIntervalMinutes?: number;
 }
 
 export const create = async (ownerId: string, groupId: string, otherData?: ListProperties) => {
@@ -142,6 +144,7 @@ const listByIdSelection = {
     },
     groupId: true,
     public: true,
+    pricePollingEnabled: true,
     description: true
 } satisfies Prisma.ListSelect;
 

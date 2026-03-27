@@ -52,6 +52,7 @@ export const load: PageServerLoad = async ({ params }) => {
                         select: {
                             id: true,
                             ownerId: true,
+                            pricePollingEnabled: true,
                             managers: {
                                 select: {
                                     userId: true
@@ -110,6 +111,8 @@ export const load: PageServerLoad = async ({ params }) => {
                     list.managers.find(({ userId }) => userId === user.id) !== undefined
             }))
         },
+        itemPollingDisabled: !item.pricePollingEnabled,
+        listPricePollingEnabled: item.lists.some(({ list }) => list.pricePollingEnabled),
         dependencyOptions,
         lists
     };
@@ -138,7 +141,8 @@ export const actions: Actions = {
             lists,
             dependsOnIds,
             optional,
-            mostWanted
+            mostWanted,
+            disablePricePolling
         } = form.data;
         const itemId = parseInt(params.itemId);
 
@@ -187,6 +191,7 @@ export const actions: Actions = {
                 id: true,
                 ownerId: true,
                 groupId: true,
+                pricePollingEnabled: true,
                 managers: {
                     select: {
                         userId: true
@@ -201,6 +206,8 @@ export const actions: Actions = {
         });
 
         const desiredListIds = new Set(desiredLists.map(({ id }) => id));
+        const hasPollingEnabledList = desiredLists.some((list) => list.pricePollingEnabled);
+        const itemPricePollingEnabled = hasPollingEnabledList && !disablePricePolling;
         const sanitizedDependsOnIds = sanitizeDependencyIds(dependsOnIds);
 
         if (sanitizedDependsOnIds.includes(itemId)) {
@@ -306,6 +313,13 @@ export const actions: Actions = {
                 quantity,
                 optional,
                 mostWanted,
+                pricePollingEnabled: itemPricePollingEnabled,
+                nextPricePollAt:
+                    itemPricePollingEnabled && url
+                        ? !item.pricePollingEnabled || item.url !== url
+                            ? new Date()
+                            : undefined
+                        : null,
                 dependencies: {
                     deleteMany: {},
                     ...(sanitizedDependsOnIds.length > 0

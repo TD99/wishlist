@@ -9,9 +9,12 @@ import {
 } from "$lib/server/auth";
 import { logger } from "$lib/server/logger";
 import { loadLocale } from "$lib/server/validations";
+import { ensurePricePollingWorker } from "$lib/server/price-polling";
 import type { Handle, HandleServerError } from "@sveltejs/kit";
 
 export const handle: Handle = async ({ event, resolve }) => {
+    ensurePricePollingWorker();
+
     let lang = getClosestAvailableLocaleFromHeader(event.request.headers.get("accept-language"));
 
     const sessionToken = event.cookies.get(sessionCookieName);

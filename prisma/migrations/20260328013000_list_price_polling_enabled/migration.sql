@@ -1,0 +1,1 @@
+ALTER TABLE "list" ADD COLUMN "pricePollingEnabled" BOOLEAN NOT NULL DEFAULT true;

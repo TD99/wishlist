@@ -25,6 +25,7 @@
     import { getFormatter } from "$lib/i18n";
     import Markdown from "$lib/components/Markdown.svelte";
     import ListStatistics from "$lib/components/wishlists/ListStatistics.svelte";
+    import ListDistributionModal from "$lib/components/wishlists/ListDistributionModal.svelte";
     import type { ActionReturn } from "svelte/action";
     import { toaster } from "$lib/components/toaster";
     import { orderItemsByDependencies } from "$lib/dependency-order";
@@ -56,6 +57,7 @@
     let isGuestView = $derived(!data.loggedInUser);
     let publicShareToken = $derived(data.publicShareToken || undefined);
     let shareLinks: ShareLinkSummary[] = $state(data.shareLinks || []);
+    let canManageList = $derived(data.list.owner.isMe || data.list.isManager);
 
     // Initialize from server data (cookie) to prevent flicker
     // This value comes from the server, so SSR renders the correct view
@@ -91,6 +93,12 @@
     onMount(() => {
         if (publicShareToken) {
             setPublicListUrl(publicShareToken);
+        }
+    });
+
+    onMount(() => {
+        if (canManageList) {
+            void refreshShareLinks();
         }
     });
 
@@ -196,6 +204,19 @@
         return new Date(createdAt).toLocaleString();
     };
 
+    const refreshShareLinks = async () => {
+        if (!canManageList) {
+            return;
+        }
+
+        const response = await listAPI.getShareLinks();
+        if (!response.ok) {
+            return;
+        }
+
+        shareLinks = (await response.json()) as ShareLinkSummary[];
+    };
+
     const updateItem = (updatedItem: ItemOnListDTO) => {
         // for when an item gets approved
         if (!allItems.find((item) => item.id === updatedItem.id)) {
@@ -236,6 +257,7 @@
 
         shareLinks = [responseData, ...shareLinks.filter((link) => link.id !== responseData.id)];
         setPublicListUrl(responseData.shareToken);
+        void refreshShareLinks();
     };
 
     const deleteShareLink = async (shareLinkId: string) => {
@@ -251,6 +273,7 @@
         }
 
         shareLinks = shareLinks.filter((link) => link.id !== shareLinkId);
+        void refreshShareLinks();
     };
 
     // custom dnd action to remove the aria disabled flag
@@ -388,7 +411,26 @@
 </div>
 
 <div class="flex flex-wrap-reverse items-start justify-between gap-2 pb-4 print:hidden">
-    <ListStatistics {items} />
+    <div class="flex items-start gap-2">
+        <ListStatistics {items} />
+        <ListDistributionModal {items}>
+            {#snippet trigger(triggerProps)}
+                <button
+                    {...triggerProps}
+                    aria-label={$t("wishes.list-distribution")}
+                    class="btn btn-icon btn-icon-sm md:btn-icon-base inset-ring-surface-500 inset-ring"
+                    onclick={(event) => {
+                        event.stopPropagation();
+                        triggerProps.onclick?.(event);
+                    }}
+                    title={$t("wishes.list-distribution")}
+                    type="button"
+                >
+                    <iconify-icon icon="ion:pie-chart"></iconify-icon>
+                </button>
+            {/snippet}
+        </ListDistributionModal>
+    </div>
     {#if data.list.owner.isMe || data.list.isManager}
         {#if data.listMode === "registry" || data.allowPublicLists || data.list.public}
             <div class="flex flex-row gap-x-2">

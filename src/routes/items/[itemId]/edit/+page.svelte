@@ -33,8 +33,10 @@
         <ItemForm
             buttonText={$t("general.save")}
             dependencyOptions={data.dependencyOptions}
+            itemPollingDisabled={data.itemPollingDisabled}
             item={data.item}
             lists={data.lists}
+            showItemPollingDisable={data.listPricePollingEnabled}
             {saving}
         />
     </form>
