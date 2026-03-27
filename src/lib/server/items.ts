@@ -45,6 +45,7 @@ export const getItemInclusions = (listId?: string) => {
         },
         dependencies: {
             select: {
+                dependsOnId: true,
                 dependsOn: {
                     select: {
                         id: true,

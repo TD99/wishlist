@@ -118,7 +118,8 @@ const generateConfig = (configData: z.infer<typeof settingSchema>) => {
             showName: configData.claimsShowName,
             showNameAcrossGroups: configData.claimsShowNameAcrossGroups,
             showForOwner: configData.claimsShowForOwner,
-            requireEmail: configData.claimsRequireEmail
+            requireEmail: configData.claimsRequireEmail,
+            allowAnonymous: configData.claimsAllowAnonymous
         },
         listMode: "standard",
         security: {

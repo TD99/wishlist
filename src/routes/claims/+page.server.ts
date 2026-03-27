@@ -85,6 +85,19 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
                     }
                 }
             },
+            dependencies: {
+                select: {
+                    dependsOnId: true,
+                    dependsOn: {
+                        select: {
+                            id: true,
+                            name: true,
+                            optional: true,
+                            mostWanted: true
+                        }
+                    }
+                }
+            },
             user: {
                 select: {
                     id: true,

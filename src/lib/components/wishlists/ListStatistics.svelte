@@ -10,8 +10,7 @@
     const { items }: Props = $props();
     const t = getFormatter();
 
-    const itemCount = $derived(items.reduce((accum, item) => accum + (item.quantity || 1), 0));
-    const totalCostByCurrency = $derived.by(() => {
+    const getTotalsByCurrency = (items: ItemOnListDTO[]) => {
         const totalCostByCurrency = items
             .filter((i) => i.itemPrice !== null)
             .reduce(
@@ -25,8 +24,21 @@
         return Object.entries(totalCostByCurrency)
             .map(([currency, total]) => ({ currency, total }))
             .toSorted((a, b) => b.total - a.total);
-    });
+    };
+
+    const getItemCount = (items: ItemOnListDTO[]) => items.reduce((accum, item) => accum + (item.quantity || 1), 0);
+    const formatTotals = (totals: { currency: string; total: number }[]) =>
+        totals.map(({ currency, total }) => formatNumberAsPrice(currency, total)).join(" · ");
+
+    const itemCount = $derived(items.reduce((accum, item) => accum + (item.quantity || 1), 0));
+    const totalCostByCurrency = $derived.by(() => getTotalsByCurrency(items));
     const highestTotal = $derived(totalCostByCurrency[0]);
+    const requiredItems = $derived(items.filter((item) => !item.optional));
+    const optionalItems = $derived(items.filter((item) => item.optional));
+    const requiredItemCount = $derived(getItemCount(requiredItems));
+    const optionalItemCount = $derived(getItemCount(optionalItems));
+    const requiredTotals = $derived.by(() => getTotalsByCurrency(requiredItems));
+    const optionalTotals = $derived.by(() => getTotalsByCurrency(optionalItems));
 
     let seePrices = $state(false);
 </script>
@@ -67,4 +79,18 @@
             </button>
         </div>
     {/if}
+    <div class="subtext flex flex-col pt-1">
+        <span>
+            {$t("wishes.required")}: {$t("wishes.count-items", { values: { itemCount: requiredItemCount } })}
+            {#if requiredTotals.length > 0}
+                · {formatTotals(requiredTotals)}
+            {/if}
+        </span>
+        <span>
+            {$t("wishes.optional")}: {$t("wishes.count-items", { values: { itemCount: optionalItemCount } })}
+            {#if optionalTotals.length > 0}
+                · {formatTotals(optionalTotals)}
+            {/if}
+        </span>
+    </div>
 </div>

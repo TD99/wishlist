@@ -1,10 +1,20 @@
 import type { listItemsUpdateSchema } from "$lib/server/validations";
 import { z } from "zod";
 
+export interface ShareLinkSummary {
+    id: string;
+    tokenHint: string;
+    createdAt: string | Date;
+    uniqueAccessorCount: number;
+}
+
 export class ListAPI {
     private listId: string;
-    constructor(listId: string) {
+    private shareToken?: string;
+
+    constructor(listId: string, options?: { shareToken?: string }) {
         this.listId = listId;
+        this.shareToken = options?.shareToken;
     }
 
     _makeRequest = async (method: string, path: string, data?: Record<string, any>) => {
@@ -15,6 +25,12 @@ export class ListAPI {
                 accept: "application/json"
             }
         };
+        if (this.shareToken) {
+            options.headers = {
+                ...options.headers,
+                "x-wishlist-share-token": this.shareToken
+            };
+        }
 
         if (data) {
             options.body = JSON.stringify(data);
@@ -28,18 +44,32 @@ export class ListAPI {
         return await this._makeRequest("PATCH", "/", { public: true });
     };
 
+    generateShareLink = async () => {
+        return await this._makeRequest("POST", "/share-links");
+    };
+
     updateItems = async (data: z.infer<typeof listItemsUpdateSchema>[]) => {
         return await this._makeRequest("PATCH", "/items", data);
+    };
+
+    getShareLinks = async () => {
+        return await this._makeRequest("GET", "/share-links");
+    };
+
+    deleteShareLink = async (shareLinkId: string) => {
+        return await this._makeRequest("DELETE", `/share-links/${shareLinkId}`);
     };
 }
 
 export class ListItemAPI {
     private listId: string;
     private itemId: number;
+    private shareToken?: string;
 
-    constructor(listId: string, itemId: number) {
+    constructor(listId: string, itemId: number, options?: { shareToken?: string }) {
         this.listId = listId;
         this.itemId = itemId;
+        this.shareToken = options?.shareToken;
     }
 
     _makeRequest = async (method: string, path: string = "/", data?: Record<string, any>) => {
@@ -50,6 +80,12 @@ export class ListItemAPI {
                 accept: "application/json"
             }
         };
+        if (this.shareToken) {
+            options.headers = {
+                ...options.headers,
+                "x-wishlist-share-token": this.shareToken
+            };
+        }
 
         if (data) {
             options.body = JSON.stringify(data);

@@ -71,6 +71,7 @@ export const settingSchema = z.object({
     claimsShowNameAcrossGroups: z.coerce.boolean().default(false),
     claimsShowForOwner: z.coerce.boolean().default(false),
     claimsRequireEmail: z.coerce.boolean().default(false),
+    claimsAllowAnonymous: z.coerce.boolean().default(false),
     listMode: z.enum(["standard", "registry"]).default("standard"),
     passwordStrength: z.coerce.number().min(-1).max(5).default(2),
     disablePasswordLogin: z.coerce.boolean().default(false),
@@ -91,7 +92,8 @@ export const settingSchema = z.object({
 });
 
 export const publicListCreateSchema = z.object({
-    public: z.boolean().optional()
+    public: z.boolean().optional(),
+    regenerateShareToken: z.coerce.boolean().optional().default(false)
 });
 
 export const getListPropertiesSchema = () => {
@@ -151,8 +153,10 @@ export const getItemCreateSchema = async () => {
         dependsOnIds: z
             .union([z.string(), z.tuple([z.string()], z.string())])
             .optional()
-            .transform((v) => (v === undefined ? [] : typeof v === "string" ? [v] : v))
-            .pipe(z.array(z.coerce.number().int().positive()))
+            .transform((v) =>
+                (v === undefined ? [] : typeof v === "string" ? [v] : v).map((value) => Number.parseInt(value, 10))
+            )
+            .pipe(z.array(z.number().int().positive()))
     });
 };
 
@@ -182,7 +186,7 @@ export const extractFormData = (formData: FormData) => {
 };
 
 export const createPublicUserSchema = z.object({
-    groupId: z.string(),
+    listId: z.string(),
     username: z.email().optional(),
     name: z.string().min(1).optional()
 });

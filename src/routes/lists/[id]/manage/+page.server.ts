@@ -10,6 +10,7 @@ import { getConfig } from "$lib/server/config";
 import { requireLogin } from "$lib/server/auth";
 import { logger } from "$lib/server/logger";
 import z from "zod";
+import { deleteAllListShareLinks } from "$lib/server/share-link";
 
 export const load: PageServerLoad = async ({ params }) => {
     const user = requireLogin();
@@ -117,12 +118,17 @@ export const actions: Actions = {
                     icon: trimToNull(listProperties.data.icon),
                     iconColor: trimToNull(listProperties.data.iconColor),
                     public: listProperties.data.public,
+                    publicShareTokenHash: listProperties.data.public ? undefined : null,
+                    publicShareTokenCreatedAt: listProperties.data.public ? undefined : null,
                     description: trimToNull(listProperties.data.description)
                 },
                 where: {
                     id: params.id
                 }
             });
+            if (!listProperties.data.public) {
+                await deleteAllListShareLinks(params.id);
+            }
 
             const managers = listProperties.data.managers;
             if (managers) {

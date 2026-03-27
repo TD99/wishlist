@@ -80,9 +80,12 @@ export class InviteUsersAPI {
 }
 
 export class SystemUsersAPI {
-    groupId?: string;
-    constructor(groupId?: string) {
-        this.groupId = groupId;
+    listId: string;
+    shareToken?: string;
+
+    constructor(listId: string, options?: { shareToken?: string }) {
+        this.listId = listId;
+        this.shareToken = options?.shareToken;
     }
 
     _makeRequest = async (method: string, body: Record<string, any>) => {
@@ -94,11 +97,17 @@ export class SystemUsersAPI {
             },
             body: JSON.stringify(body)
         };
+        if (this.shareToken) {
+            options.headers = {
+                ...options.headers,
+                "x-wishlist-share-token": this.shareToken
+            };
+        }
 
         return await fetch(`/api/users/public`, options);
     };
 
     create = async (username?: string, name?: string) => {
-        return await this._makeRequest("POST", { username, name, groupId: this.groupId });
+        return await this._makeRequest("POST", { username, name, listId: this.listId });
     };
 }

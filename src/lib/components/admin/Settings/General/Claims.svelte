@@ -76,4 +76,20 @@
             {$t("admin.claims-require-email-tooltip")}
         {/snippet}
     </Setting>
+    <Setting>
+        <label class="checkbox-label">
+            <input
+                id="claimsAllowAnonymous"
+                name="claimsAllowAnonymous"
+                class="checkbox"
+                checked={config.claims.allowAnonymous}
+                type="checkbox"
+            />
+            <span>{$t("admin.claims-allow-anonymous")}</span>
+        </label>
+
+        {#snippet description()}
+            {$t("admin.claims-allow-anonymous-tooltip")}
+        {/snippet}
+    </Setting>
 </SettingsGroup>

@@ -92,6 +92,9 @@ model List {
     group       Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
     groupId     String
     public      Boolean       @default(false)
+    publicShareTokenHash      String?       @unique
+    publicShareTokenCreatedAt DateTime?
+    shareLinks  ListShareLink[]
     icon        String?
     iconColor   String?
     items       ListItem[]
@@ -102,6 +105,31 @@ model List {
     @@index([groupId])
     @@index([ownerId, groupId])
     @@map("list")
+}
+
+model ListShareLink {
+    id        String                  @id @unique @default(uuid())
+    list      List                    @relation(fields: [listId], references: [id], onDelete: Cascade)
+    listId    String
+    tokenHash String                  @unique
+    tokenHint String
+    createdAt DateTime                @default(now())
+    accessors ListShareLinkAccessor[]
+
+    @@index([listId])
+    @@map("list_share_link")
+}
+
+model ListShareLinkAccessor {
+    shareLink      ListShareLink @relation(fields: [shareLinkId], references: [id], onDelete: Cascade)
+    shareLinkId    String
+    accessorId     String
+    firstAccessedAt DateTime     @default(now())
+    lastAccessedAt DateTime      @default(now())
+
+    @@id([shareLinkId, accessorId])
+    @@index([accessorId])
+    @@map("list_share_link_accessor")
 }
 
 model ListManager {

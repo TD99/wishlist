@@ -14,7 +14,7 @@
     import SortBy from "$lib/components/wishlists/chips/SortBy.svelte";
     import { hash, hashItems, viewedItems } from "$lib/stores/viewed-items";
     import { getListViewPreference, initListViewPreference } from "$lib/stores/list-view-preference.svelte";
-    import { ListAPI } from "$lib/api/lists";
+    import { ListAPI, type ShareLinkSummary } from "$lib/api/lists";
     import TokenCopy from "$lib/components/TokenCopy.svelte";
     import { dragHandleZone, type DndZoneAttributes, type Item, type Options } from "svelte-dnd-action";
     import ReorderChip from "$lib/components/wishlists/chips/ReorderChip.svelte";
@@ -53,6 +53,9 @@
         }
     });
     let hideDescription = $state(false);
+    let isGuestView = $derived(!data.loggedInUser);
+    let publicShareToken = $derived(data.publicShareToken || undefined);
+    let shareLinks: ShareLinkSummary[] = $state(data.shareLinks || []);
 
     // Initialize from server data (cookie) to prevent flicker
     // This value comes from the server, so SSR renders the correct view
@@ -86,6 +89,12 @@
     });
 
     onMount(() => {
+        if (publicShareToken) {
+            setPublicListUrl(publicShareToken);
+        }
+    });
+
+    onMount(() => {
         const eventSource = subscribeToEvents();
         return () => eventSource.close();
     });
@@ -115,7 +124,9 @@
         }
         return items.reduce(
             (g, v) => {
-                const userHasClaimed = v.claims.find((c) => data.user?.id && c.claimedBy?.id === data.user.id);
+                const userHasClaimed = v.claims.find(
+                    (c) => data.loggedInUser?.id && c.claimedBy?.id === data.loggedInUser.id
+                );
                 if (v.isClaimable && !userHasClaimed) {
                     g[0].push(v);
                 } else {
@@ -149,7 +160,11 @@
     };
 
     const subscribeToEvents = () => {
-        const eventSource = new EventSource(`${page.url.pathname}/events`);
+        const eventsUrl = new URL(`${page.url.pathname}/events`, window.location.origin);
+        if (publicShareToken) {
+            eventsUrl.searchParams.set("share", publicShareToken);
+        }
+        const eventSource = new EventSource(eventsUrl.toString());
         ItemUpdateHandler.listen(eventSource, (data) => {
             updateItem(data);
             updateHash();
@@ -169,6 +184,16 @@
             }
         });
         return eventSource;
+    };
+
+    const setPublicListUrl = (shareToken: string) => {
+        const url = new URL(`/lists/${data.list.id}`, window.location.origin);
+        url.searchParams.set("share", shareToken);
+        publicListUrl = url;
+    };
+
+    const formatShareLinkDate = (createdAt: string | Date) => {
+        return new Date(createdAt).toLocaleString();
     };
 
     const updateItem = (updatedItem: ItemOnListDTO) => {
@@ -196,16 +221,36 @@
     };
 
     const getOrCreatePublicList = async () => {
-        if (!data.list.public) {
-            const listApi = new ListAPI(data.list.id);
-            const resp = await listApi.makePublic();
-            if (!resp.ok) {
-                const description = await resp.text();
-                toaster.error({ description });
-                return;
-            }
+        const resp = await listAPI.generateShareLink();
+        if (!resp.ok) {
+            const description = await resp.text();
+            toaster.error({ description });
+            return;
         }
-        publicListUrl = new URL(`/lists/${data.list.id}`, window.location as unknown as URL);
+
+        const responseData = (await resp.json()) as ShareLinkSummary & { shareToken?: string };
+        if (!responseData.shareToken) {
+            toaster.error({ description: $t("general.oops") });
+            return;
+        }
+
+        shareLinks = [responseData, ...shareLinks.filter((link) => link.id !== responseData.id)];
+        setPublicListUrl(responseData.shareToken);
+    };
+
+    const deleteShareLink = async (shareLinkId: string) => {
+        const response = await listAPI.deleteShareLink(shareLinkId);
+        if (!response.ok) {
+            toaster.error({ description: $t("general.oops") });
+            return;
+        }
+
+        const currentShareToken = publicListUrl?.searchParams.get("share");
+        if (currentShareToken?.startsWith(`${shareLinkId}.`)) {
+            publicListUrl = undefined;
+        }
+
+        shareLinks = shareLinks.filter((link) => link.id !== shareLinkId);
     };
 
     // custom dnd action to remove the aria disabled flag
@@ -342,10 +387,10 @@
     </div>
 </div>
 
-{#if data.list.owner.isMe || data.list.isManager}
-    <div class="flex flex-wrap-reverse items-start justify-between gap-2 pb-4 print:hidden">
-        <ListStatistics {items} />
-        {#if data.listMode === "registry" || data.list.public}
+<div class="flex flex-wrap-reverse items-start justify-between gap-2 pb-4 print:hidden">
+    <ListStatistics {items} />
+    {#if data.list.owner.isMe || data.list.isManager}
+        {#if data.listMode === "registry" || data.allowPublicLists || data.list.public}
             <div class="flex flex-row gap-x-2">
                 {#if publicListUrl}
                     <TokenCopy btnStyle="btn-xs" url={publicListUrl?.href}>
@@ -356,6 +401,36 @@
                         {$t("wishes.share")}
                     </button>
                 {/if}
+            </div>
+        {/if}
+    {/if}
+</div>
+
+{#if data.list.owner.isMe || data.list.isManager}
+    <div class="rounded-container border-surface-500 mb-4 flex flex-col gap-2 border p-3 print:hidden">
+        <h3 class="text-base font-semibold">{$t("wishes.shared-links")}</h3>
+        {#if shareLinks.length === 0}
+            <p class="subtext">{$t("wishes.no-shared-links")}</p>
+        {:else}
+            <div class="flex flex-col gap-2">
+                {#each shareLinks as link (link.id)}
+                    <div class="rounded-base bg-surface-100-900 flex items-center justify-between gap-2 p-2">
+                        <div class="min-w-0">
+                            <p class="font-mono text-xs">{$t("wishes.shared-link-hint", { values: { hint: link.tokenHint } })}</p>
+                            <p class="subtext text-xs">
+                                {$t("wishes.shared-link-meta", {
+                                    values: {
+                                        createdAt: formatShareLinkDate(link.createdAt),
+                                        accessorCount: link.uniqueAccessorCount
+                                    }
+                                })}
+                            </p>
+                        </div>
+                        <button class="btn btn-xs" onclick={() => deleteShareLink(link.id)} type="button">
+                            {$t("general.remove")}
+                        </button>
+                    </div>
+                {/each}
             </div>
         {/if}
     </div>
@@ -376,7 +451,9 @@
                         groupId={data.list.groupId}
                         {isTileView}
                         {item}
-                        onPublicList={!data.loggedInUser && data.list.public}
+                        onPublicList={isGuestView}
+                        {publicShareToken}
+                        allowAnonymousClaims={data.allowAnonymousClaims}
                         requireClaimEmail={data.requireClaimEmail}
                         showClaimForOwner={data.showClaimForOwner}
                         showClaimedName={data.showClaimedName}
@@ -433,7 +510,9 @@
                                     onDecreasePriority={handleDecreasePriority}
                                     onIncreasePriority={handleIncreasePriority}
                                     onPriorityChange={handlePriorityInput}
-                                    onPublicList={!data.loggedInUser && data.list.public}
+                                    onPublicList={isGuestView}
+                                    {publicShareToken}
+                                    allowAnonymousClaims={data.allowAnonymousClaims}
                                     reorderActions
                                     requireClaimEmail={data.requireClaimEmail}
                                     showClaimForOwner={data.showClaimForOwner}
@@ -466,7 +545,9 @@
                                         groupId={data.list.groupId}
                                         {isTileView}
                                         {item}
-                                        onPublicList={!data.loggedInUser && data.list.public}
+                                        onPublicList={isGuestView}
+                                        {publicShareToken}
+                                        allowAnonymousClaims={data.allowAnonymousClaims}
                                         requireClaimEmail={data.requireClaimEmail}
                                         showClaimForOwner={data.showClaimForOwner}
                                         showClaimedName={data.showClaimedName}
@@ -517,7 +598,9 @@
                                     onDecreasePriority={handleDecreasePriority}
                                     onIncreasePriority={handleIncreasePriority}
                                     onPriorityChange={handlePriorityInput}
-                                    onPublicList={!data.loggedInUser && data.list.public}
+                                    onPublicList={isGuestView}
+                                    {publicShareToken}
+                                    allowAnonymousClaims={data.allowAnonymousClaims}
                                     reorderActions
                                     requireClaimEmail={data.requireClaimEmail}
                                     showClaimForOwner={data.showClaimForOwner}
@@ -550,7 +633,9 @@
                                         groupId={data.list.groupId}
                                         {isTileView}
                                         {item}
-                                        onPublicList={!data.loggedInUser && data.list.public}
+                                        onPublicList={isGuestView}
+                                        {publicShareToken}
+                                        allowAnonymousClaims={data.allowAnonymousClaims}
                                         requireClaimEmail={data.requireClaimEmail}
                                         showClaimForOwner={data.showClaimForOwner}
                                         showClaimedName={data.showClaimedName}

@@ -4,28 +4,30 @@ import type { RequestHandler } from "./$types";
 import { error } from "@sveltejs/kit";
 import { getConfig } from "$lib/server/config";
 import { getFormatter } from "$lib/server/i18n";
-import { getById } from "$lib/server/list";
+import { getByIdForAccess } from "$lib/server/list";
 import { getActiveMembership } from "$lib/server/group-membership";
 import { ItemCreateHandler, ItemDeleteHandler, ItemsUpdateHandler, ItemUpdateHandler } from "$lib/events";
+import { getShareTokenFromUrl, validateListShareToken } from "$lib/server/share-link";
 
-export const GET = (async ({ locals, params }) => {
+export const GET = (async ({ locals, params, url }) => {
     const $t = await getFormatter();
+    const shareToken = getShareTokenFromUrl(url);
 
-    const list = await getById(params.id);
-    const config = await getConfig(list?.groupId);
+    const list = await getByIdForAccess(params.id);
+    const hasValidShareToken = !!list && (await validateListShareToken(list, shareToken)).valid;
+
     if (!locals.user) {
-        // Unauthenticated users can only view public lists
-        if (!list || !list.public) {
-            // Redirect to login so we don't expose details if the list does exist
+        if (!list || !hasValidShareToken) {
             return new Response();
         }
     } else {
-        // Logged in users must be in the correct group, or viewing a public list
         const activeMembership = await getActiveMembership(locals.user);
-        if (!list || (!list.public && list.groupId !== activeMembership.groupId)) {
+        if (!list || (list.groupId !== activeMembership.groupId && !hasValidShareToken)) {
             error(404, $t("errors.list-not-found"));
         }
     }
+
+    const config = await getConfig(list.groupId);
 
     // don't do updates on the list owners page for surprise mode since an item could be added that the owner shouldn't see
     if (

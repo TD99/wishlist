@@ -7,7 +7,7 @@
 
     interface Props extends Pick<
         ItemCardProps,
-        "item" | "onPublicList" | "user" | "showClaimForOwner" | "showClaimedName" | "showNameAcrossGroups" | "showFor"
+        "item" | "user" | "showClaimForOwner" | "showClaimedName" | "showNameAcrossGroups" | "showFor"
     > {
         showDetail?: boolean;
         fullNotes?: boolean;
@@ -16,7 +16,6 @@
     const t = getFormatter();
     const {
         item,
-        onPublicList,
         user,
         showClaimedName,
         showNameAcrossGroups = false,
@@ -109,16 +108,10 @@
     <span class="text-wrap" data-testid="added-by">
         {#if showFor}
             {@html $t("wishes.for", { values: { name: item.user.name, class: "text-secondary-900-100 font-bold" } })}
-        {:else if !onPublicList}
+        {:else}
             {@html $t("wishes.added-by", {
                 values: { name: item.addedBy.name, class: "text-secondary-900-100 font-bold" }
             })}
-        {:else}
-            {@html item.addedBy.id === item.user.id
-                ? $t("wishes.added-by", {
-                      values: { name: item.addedBy.name, class: "text-secondary-900-100 font-bold" }
-                  })
-                : $t("wishes.added-by-somebody-else", { values: { class: "text-secondary-900-100 font-bold" } })}
         {/if}
     </span>
 </div>

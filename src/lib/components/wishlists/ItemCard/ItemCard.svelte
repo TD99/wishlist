@@ -13,7 +13,9 @@
         showNameAcrossGroups?: boolean;
         showClaimForOwner?: boolean;
         requireClaimEmail: boolean;
+        allowAnonymousClaims?: boolean;
         groupId: string;
+        publicShareToken?: string;
         showFor?: boolean;
         onPublicList?: boolean;
         reorderActions?: boolean;
@@ -32,7 +34,9 @@
         showNameAcrossGroups: boolean;
         showClaimForOwner: boolean;
         requireClaimEmail: boolean;
+        allowAnonymousClaims: boolean;
         groupId: string;
+        publicShareToken?: string;
         showFor: boolean;
         onPublicList: boolean;
         reorderActions: boolean;
@@ -64,7 +68,9 @@
         showNameAcrossGroups = false,
         showClaimForOwner = false,
         requireClaimEmail = true,
+        allowAnonymousClaims = true,
         showFor = false,
+        publicShareToken = undefined,
         onPublicList = false,
         reorderActions = false,
         onIncreasePriority = undefined,
@@ -84,7 +90,10 @@
     });
 
     function launchDrawer() {
-        goto(`?item-id=${item.id}`, { replaceState: true, noScroll: true });
+        const params = new URLSearchParams(page.url.searchParams);
+        params.set("item-id", item.id.toString());
+
+        goto(`?${params.toString()}`, { replaceState: true, noScroll: true });
     }
 
     function openDrawer() {
@@ -113,6 +122,8 @@
     {onDecreasePriority}
     {onIncreasePriority}
     {onPriorityChange}
+    {allowAnonymousClaims}
+    {publicShareToken}
     {onPublicList}
     {reorderActions}
     {requireClaimEmail}
@@ -148,6 +159,8 @@
         {onDecreasePriority}
         {onIncreasePriority}
         {onPriorityChange}
+        {allowAnonymousClaims}
+        {publicShareToken}
         {onPublicList}
         {reorderActions}
         {requireClaimEmail}

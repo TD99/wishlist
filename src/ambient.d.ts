@@ -102,6 +102,7 @@ type Config = {
         showNameAcrossGroups: boolean;
         showForOwner: boolean;
         requireEmail: boolean;
+        allowAnonymous: boolean;
     };
     listMode: ListMode;
     security: {

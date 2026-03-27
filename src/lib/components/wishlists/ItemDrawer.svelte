@@ -27,6 +27,14 @@
         "data-[state=open]:translate-y-0 starting:data-[state=open]:translate-y-1/2 md:starting:data-[state=open]:translate-y-0 md:data-[state=open]:scale-100 md:starting:data-[state=open]:scale-90";
     const transitionOut =
         "data-[state=closed]:translate-y-1/2 starting:data-[state=closed]:translate-y-0 md:data-[state=closed]:translate-y-0 md:data-[state=closed]:scale-90 md:starting:data-[state=closed]:scale-100";
+
+    const closeDrawerUrl = () => {
+        const params = new URLSearchParams(page.url.searchParams);
+        params.delete("item-id");
+        const query = params.toString();
+
+        return query ? `${page.url.pathname}?${query}` : page.url.pathname;
+    };
 </script>
 
 <Dialog onOpenChange={(e) => (open = e.open)} {open}>
@@ -43,7 +51,7 @@
                     <Dialog.CloseTrigger
                         class="preset-tonal-surface border-surface-500 btn-icon border"
                         aria-label={$t("a11y.close")}
-                        onclick={() => goto(page.url.pathname, { replaceState: true, noScroll: true })}
+                        onclick={() => goto(closeDrawerUrl(), { replaceState: true, noScroll: true })}
                     >
                         <iconify-icon icon="ion:close"></iconify-icon>
                     </Dialog.CloseTrigger>

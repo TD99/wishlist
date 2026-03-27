@@ -125,26 +125,40 @@ export const deleteLists = async (ownerId: string | undefined, groupId: string) 
     });
 };
 
-export const getById = async (id: string) => {
-    return await client.list.findUnique({
+const listByIdSelection = {
+    id: true,
+    name: true,
+    owner: {
         select: {
             id: true,
-            name: true,
-            owner: {
-                select: {
-                    id: true,
-                    username: true,
-                    name: true
-                }
-            },
-            managers: {
-                select: {
-                    userId: true
-                }
-            },
-            groupId: true,
-            public: true,
-            description: true
+            username: true,
+            name: true
+        }
+    },
+    managers: {
+        select: {
+            userId: true
+        }
+    },
+    groupId: true,
+    public: true,
+    description: true
+} satisfies Prisma.ListSelect;
+
+export const getById = async (id: string) => {
+    return await client.list.findUnique({
+        select: listByIdSelection,
+        where: {
+            id
+        }
+    });
+};
+
+export const getByIdForAccess = async (id: string) => {
+    return await client.list.findUnique({
+        select: {
+            ...listByIdSelection,
+            publicShareTokenHash: true
         },
         where: {
             id

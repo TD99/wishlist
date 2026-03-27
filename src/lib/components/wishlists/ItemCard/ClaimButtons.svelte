@@ -14,7 +14,8 @@
         | "showNameAcrossGroups"
         | "showClaimForOwner"
         | "onPublicList"
-        | "groupId"
+        | "allowAnonymousClaims"
+        | "publicShareToken"
         | "requireClaimEmail"
     >;
 
@@ -25,7 +26,8 @@
         showNameAcrossGroups = false,
         showClaimForOwner = false,
         onPublicList = false,
-        groupId,
+        allowAnonymousClaims = true,
+        publicShareToken,
         requireClaimEmail
     }: Props = $props();
 
@@ -51,7 +53,13 @@
 {:else if userClaim}
     {#if isClaimOnList}
         <div class="flex flex-row items-center gap-2">
-            <ClaimItemModal claimId={userClaim.claimId} {groupId} {item} {requireClaimEmail} userId={user?.id}>
+            <ClaimItemModal
+                claimId={userClaim.claimId}
+                {item}
+                {publicShareToken}
+                {requireClaimEmail}
+                userId={user?.id}
+            >
                 {#snippet trigger(props)}
                     <button
                         {...props}
@@ -82,9 +90,9 @@
     {:else}
         <span class="text-subtle text-wrap">{$t("wishes.claimed-by-you-on-another-list")}</span>
     {/if}
-{:else if item.isClaimable && item.userId !== user?.id}
+{:else if item.isClaimable && item.userId !== user?.id && (user !== undefined || allowAnonymousClaims)}
     <div class="flex flex-row items-center gap-x-2">
-        <ClaimItemModal {groupId} {item} {requireClaimEmail} userId={user?.id}>
+        <ClaimItemModal {item} {publicShareToken} {requireClaimEmail} userId={user?.id}>
             {#snippet trigger(props)}
                 <button {...props} class="btn btn-sm md:btn preset-filled-secondary-300-700">
                     {$t("wishes.claim")}

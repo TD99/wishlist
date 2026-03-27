@@ -11,8 +11,8 @@
     interface Props extends Omit<BaseModalProps, "title" | "description" | "actions" | "children" | "element"> {
         item: ItemOnListDTO;
         userId: string | undefined;
-        groupId: string;
         requireClaimEmail: boolean;
+        publicShareToken?: string;
         claimId?: string;
         onSuccess?: VoidFunction;
         onFailure?: VoidFunction;
@@ -21,7 +21,7 @@
     let {
         item,
         userId,
-        groupId,
+        publicShareToken,
         claimId,
         requireClaimEmail,
         onSuccess,
@@ -98,7 +98,7 @@
     }
 
     async function handleUserClaim(userId: string) {
-        const listItemAPI = new ListItemAPI(item.listId, item.id);
+        const listItemAPI = new ListItemAPI(item.listId, item.id, { shareToken: publicShareToken });
         const resp = await listItemAPI.claim(userId, quantity);
 
         if (resp.ok) {
@@ -110,7 +110,7 @@
     }
 
     async function handlePublicClaim() {
-        const systemUsersAPI = new SystemUsersAPI(groupId);
+        const systemUsersAPI = new SystemUsersAPI(item.listId, { shareToken: publicShareToken });
         const userResp = await systemUsersAPI.create(username, name);
         if (!userResp.ok) {
             const responseData = await userResp.json();
@@ -121,7 +121,7 @@
         }
         const { id: publicUserId } = await userResp.json();
 
-        const listItemAPI = new ListItemAPI(item.listId, item.id);
+        const listItemAPI = new ListItemAPI(item.listId, item.id, { shareToken: publicShareToken });
         const resp = await listItemAPI.claimPublic(publicUserId, quantity);
 
         if (resp.ok) {

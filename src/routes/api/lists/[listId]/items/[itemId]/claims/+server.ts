@@ -9,9 +9,12 @@ import { getItemInclusions } from "$lib/server/items";
 import { ItemEvent } from "$lib/events";
 import { logger } from "$lib/server/logger";
 import z from "zod";
+import { getActiveMembership } from "$lib/server/group-membership";
+import { getShareTokenFromRequest, validateListShareToken } from "$lib/server/share-link";
+import { getConfig } from "$lib/server/config";
 
 // Claim an item on a list
-export const PUT: RequestHandler = async ({ locals, request, params }) => {
+export const PUT: RequestHandler = async ({ locals, request, params, url }) => {
     const $t = await getFormatter();
 
     const body = (await request.json()) as Record<string, unknown>[];
@@ -27,7 +30,9 @@ export const PUT: RequestHandler = async ({ locals, request, params }) => {
     const list = await client.list.findUnique({
         select: {
             id: true,
-            public: true
+            public: true,
+            publicShareTokenHash: true,
+            groupId: true
         },
         where: {
             id: params.listId
@@ -37,12 +42,28 @@ export const PUT: RequestHandler = async ({ locals, request, params }) => {
     if (!list) {
         error(404, $t("errors.list-not-found"));
     }
+    const shareToken = getShareTokenFromRequest(request, url);
+    const hasValidShareToken = (await validateListShareToken(list, shareToken)).valid;
+
+    if (locals.user) {
+        const activeMembership = await getActiveMembership(locals.user);
+        if (activeMembership.groupId !== list.groupId && !hasValidShareToken) {
+            error(404, $t("errors.list-not-found"));
+        }
+    }
 
     if (updateData.data.claimedById !== undefined && updateData.data.claimedById !== null) {
         if (!locals.user) error(401, $t("errors.unauthenticated"));
     }
-    if (updateData.data.publicClaimedById && !list.public) {
-        error(404, $t("errors.list-not-found"));
+    if (updateData.data.publicClaimedById) {
+        if (!hasValidShareToken) {
+            error(404, $t("errors.list-not-found"));
+        }
+
+        const config = await getConfig(list.groupId);
+        if (!config.claims.allowAnonymous) {
+            error(403, $t("errors.not-authorized"));
+        }
     }
 
     if (isNaN(parseInt(params.itemId))) {
