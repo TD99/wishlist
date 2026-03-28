@@ -467,13 +467,13 @@
         "switch-to-list-view": "Bytt til listevisning",
         "switch-to-tile-view": "Bytt til tittelvisning",
         "tile-view": "Tittelvisning",
-        "items": "items",
-        "view-mode-label": "View",
-        "view-mode-currency": "Currency distribution",
-        "view-mode-product": "Price by product",
-        "view-mode-quantity": "Quantity by product",
-        "price-axis-label": "Price",
-        "time-axis-label": "Time"
+        "items": "elementer",
+        "view-mode-label": "Visning",
+        "view-mode-currency": "Valutafordeling",
+        "view-mode-product": "Pris etter produkt",
+        "view-mode-quantity": "Antall etter produkt",
+        "price-axis-label": "Pris",
+        "time-axis-label": "Tid"
     },
     "unable-to-load-icons": "Kunne ikke laste ikonene."
 }

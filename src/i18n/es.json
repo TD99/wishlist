@@ -366,13 +366,13 @@
         "my-lists": "Mis listas",
         "no-lists-yet": "No hay listas aún",
         "public": "Públicas",
-        "items": "items",
-        "view-mode-label": "View",
-        "view-mode-currency": "Currency distribution",
-        "view-mode-product": "Price by product",
-        "view-mode-quantity": "Quantity by product",
-        "price-axis-label": "Price",
-        "time-axis-label": "Time"
+        "items": "artículos",
+        "view-mode-label": "Vista",
+        "view-mode-currency": "Distribución de divisas",
+        "view-mode-product": "Precio por producto",
+        "view-mode-quantity": "Cantidad por producto",
+        "price-axis-label": "Precio",
+        "time-axis-label": "Tiempo"
     },
     "app": {
         "home": "Inicio",

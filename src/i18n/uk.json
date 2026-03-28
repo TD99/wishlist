@@ -421,12 +421,12 @@
         "wishes-for": "Бажання {listOwner}",
         "write": "Написати",
         "no-wishes-yet": "Немає побажань",
-        "items": "items",
-        "view-mode-label": "View",
-        "view-mode-currency": "Currency distribution",
-        "view-mode-product": "Price by product",
-        "view-mode-quantity": "Quantity by product",
-        "price-axis-label": "Price",
-        "time-axis-label": "Time"
+        "items": "елементи",
+        "view-mode-label": "Вигляд",
+        "view-mode-currency": "Розподіл валют",
+        "view-mode-product": "Ціна за товаром",
+        "view-mode-quantity": "Кількість за товаром",
+        "price-axis-label": "Ціна",
+        "time-axis-label": "Час"
     }
 }

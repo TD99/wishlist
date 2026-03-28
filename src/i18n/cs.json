@@ -468,12 +468,12 @@
         "import-item-text": "Před importem vyberte skupinu a seznam",
         "select-a-list": "Vybrat seznam",
         "item-created": "Položka vytvořena",
-        "items": "items",
-        "view-mode-label": "View",
-        "view-mode-currency": "Currency distribution",
-        "view-mode-product": "Price by product",
-        "view-mode-quantity": "Quantity by product",
-        "price-axis-label": "Price",
-        "time-axis-label": "Time"
+        "items": "položky",
+        "view-mode-label": "Zobrazení",
+        "view-mode-currency": "Distribuce měn",
+        "view-mode-product": "Cena podle produktu",
+        "view-mode-quantity": "Množství podle produktu",
+        "price-axis-label": "Cena",
+        "time-axis-label": "Čas"
     }
 }

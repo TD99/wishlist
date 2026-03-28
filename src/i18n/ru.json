@@ -468,12 +468,12 @@
         "import-item-text": "Прежде чем импортировать элемент, вы должны выбрать группу и список",
         "select-a-list": "Выбрать список",
         "item-created": "Объект создан",
-        "items": "items",
-        "view-mode-label": "View",
-        "view-mode-currency": "Currency distribution",
-        "view-mode-product": "Price by product",
-        "view-mode-quantity": "Quantity by product",
-        "price-axis-label": "Price",
-        "time-axis-label": "Time"
+        "items": "элементы",
+        "view-mode-label": "Вид",
+        "view-mode-currency": "Распределение валют",
+        "view-mode-product": "Цена по товару",
+        "view-mode-quantity": "Количество по товару",
+        "price-axis-label": "Цена",
+        "time-axis-label": "Время"
     }
 }

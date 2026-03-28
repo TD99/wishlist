@@ -248,13 +248,13 @@
         "item-was-removed-from-list": "Usunięto {name} z listy",
         "my-lists": "Moja Listy",
         "no-lists-yet": "Brak list",
-        "items": "items",
-        "view-mode-label": "View",
-        "view-mode-currency": "Currency distribution",
-        "view-mode-product": "Price by product",
-        "view-mode-quantity": "Quantity by product",
-        "price-axis-label": "Price",
-        "time-axis-label": "Time"
+        "items": "pozycje",
+        "view-mode-label": "Widok",
+        "view-mode-currency": "Rozkład walut",
+        "view-mode-product": "Cena według produktu",
+        "view-mode-quantity": "Ilość według produktu",
+        "price-axis-label": "Cena",
+        "time-axis-label": "Czas"
     },
     "a11y": {
         "refresh-item-data": "odśwież dane przedmiotu",

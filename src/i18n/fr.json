@@ -467,13 +467,13 @@
         "import-item-text": "Avant d'importer un élément, vous devez choisir un groupe et une liste",
         "select-a-list": "Sélectionner une liste",
         "item-created": "Elément créé",
-        "items": "items",
-        "view-mode-label": "View",
-        "view-mode-currency": "Currency distribution",
-        "view-mode-product": "Price by product",
-        "view-mode-quantity": "Quantity by product",
-        "price-axis-label": "Price",
-        "time-axis-label": "Time"
+        "items": "articles",
+        "view-mode-label": "Affichage",
+        "view-mode-currency": "Distribution des devises",
+        "view-mode-product": "Prix par produit",
+        "view-mode-quantity": "Quantité par produit",
+        "price-axis-label": "Prix",
+        "time-axis-label": "Temps"
     },
     "unable-to-load-icons": "Impossible de charger les icônes."
 }

@@ -469,13 +469,13 @@
         "sort-by": "Sortera efter",
         "supports-markdown": "Stöder Markdown",
         "item-created": "Artikel skapad",
-        "items": "items",
-        "view-mode-label": "View",
-        "view-mode-currency": "Currency distribution",
-        "view-mode-product": "Price by product",
-        "view-mode-quantity": "Quantity by product",
-        "price-axis-label": "Price",
-        "time-axis-label": "Time"
+        "items": "artiklar",
+        "view-mode-label": "Vy",
+        "view-mode-currency": "Valutafördelning",
+        "view-mode-product": "Pris per produkt",
+        "view-mode-quantity": "Antal per produkt",
+        "price-axis-label": "Pris",
+        "time-axis-label": "Tid"
     },
     "unable-to-load-icons": "Det gick inte att ladda ikoner."
 }

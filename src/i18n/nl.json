@@ -469,11 +469,11 @@
         "select-a-list": "Selecteer een lijst",
         "item-created": "Item aangemaakt",
         "items": "items",
-        "view-mode-label": "View",
-        "view-mode-currency": "Currency distribution",
-        "view-mode-product": "Price by product",
-        "view-mode-quantity": "Quantity by product",
-        "price-axis-label": "Price",
-        "time-axis-label": "Time"
+        "view-mode-label": "Weergave",
+        "view-mode-currency": "Valutaverdeling",
+        "view-mode-product": "Prijs per product",
+        "view-mode-quantity": "Hoeveelheid per product",
+        "price-axis-label": "Prijs",
+        "time-axis-label": "Tijd"
     }
 }
