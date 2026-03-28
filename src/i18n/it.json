@@ -74,5 +74,14 @@
         "oidc-auto-redirect-description": "Reindirizza automaticamente alla tua pagina di accesso IdP.",
         "oidc-auto-redirect-tooltip": "Per evitare la redirezione automatica, '?direct=1' può essere aggiunto all'URL.",
         "oidc-auto-register": "Auto registrazione"
+    },
+    "wishes": {
+        "items": "items",
+        "view-mode-label": "View",
+        "view-mode-currency": "Currency distribution",
+        "view-mode-product": "Price by product",
+        "view-mode-quantity": "Quantity by product",
+        "price-axis-label": "Price",
+        "time-axis-label": "Time"
     }
 }

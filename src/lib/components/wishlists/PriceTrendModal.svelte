@@ -127,6 +127,10 @@
         return value ? new Date(value).toLocaleString() : $t("general.na");
     };
 
+    const getPointKey = (point: PricePoint, index: number) => {
+        return `${point.polledAt}:${index}`;
+    };
+
     const refreshHistory = async () => {
         loading = true;
         errorMessage = null;
@@ -193,7 +197,7 @@
                     <path d={pathD} fill="none" stroke="var(--color-primary-500)" stroke-width="2.5"></path>
                     
                     <!-- Data points with hover area -->
-                    {#each coordinates as { x, y, point } (point.polledAt)}
+                    {#each coordinates as { x, y, point }, index (getPointKey(point, index))}
                         <g>
                             <circle cx={x} cy={y} fill="var(--color-primary-500)" r="3"></circle>
                             <!-- Invisible larger circle for easier hover -->

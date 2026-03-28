@@ -20,12 +20,14 @@
     }
 
     interface ProductTotal {
+        id: number;
         name: string;
         total: number;
         currency: string;
     }
 
     interface QuantityTotal {
+        id: number;
         name: string;
         quantity: number;
     }
@@ -66,7 +68,7 @@
     const t = getFormatter();
     let open = $state(false);
     let viewMode = $state<"currency" | "product" | "quantity">("product");
-    let hoveredSlice = $state<PieSlice | null>(null);
+    let hoveredSlice = $state<PieSlice | ProductPieSlice | QuantityPieSlice | null>(null);
 
     const getTotalsByCurrency = (source: ItemOnListDTO[]) => {
         const byCurrency = source
@@ -92,7 +94,8 @@
             .map((item) => {
                 const quantity = item.quantity || 1;
                 return {
-                    name: item.itemName,
+                    id: item.id,
+                    name: item.name,
                     total: item.itemPrice!.value * quantity,
                     currency: item.itemPrice!.currency
                 } satisfies ProductTotal;
@@ -103,7 +106,8 @@
     const getQuantitiesByProduct = (source: ItemOnListDTO[]) => {
         return source
             .map((item) => ({
-                name: item.itemName,
+                id: item.id,
+                name: item.name,
                 quantity: item.quantity || 1
             } satisfies QuantityTotal))
             .toSorted((a, b) => b.quantity - a.quantity);
@@ -194,6 +198,18 @@
         ].join(" ");
     };
 
+    const getSliceKey = (slice: PieSlice | ProductPieSlice | QuantityPieSlice) => {
+        if ("id" in slice) {
+            return `item:${slice.id}`;
+        }
+        return `currency:${slice.currency}`;
+    };
+
+    $effect(() => {
+        viewMode;
+        hoveredSlice = null;
+    });
+
     // Currency distribution (existing logic)
     const requiredTotals = $derived.by(() => getTotalsByCurrency(items.filter((item) => !item.optional)));
     const optionalTotals = $derived.by(() => getTotalsByCurrency(items.filter((item) => item.optional)));
@@ -231,7 +247,7 @@
             <div class="grid gap-3 lg:grid-cols-[10rem_1fr]">
                 <div class="relative mx-auto size-40">
                     <svg aria-label={title} class="size-40" viewBox="0 0 120 120">
-                        {#each slices as slice, index (viewMode === "currency" ? (slice as PieSlice).currency : viewMode === "product" ? (slice as ProductPieSlice).name + index : (slice as QuantityPieSlice).name + index)}
+                        {#each slices as slice (getSliceKey(slice))}
                             <path
                                 d={toSlicePath(slice, 60, 60, 52)}
                                 fill={slice.color}
@@ -265,7 +281,7 @@
                     {/if}
                 </div>
                 <ul class="grid gap-1">
-                    {#each slices as slice, index (viewMode === "currency" ? (slice as PieSlice).currency : viewMode === "product" ? (slice as ProductPieSlice).name + index : (slice as QuantityPieSlice).name + index)}
+                    {#each slices as slice (getSliceKey(slice))}
                         <li class="flex items-center justify-between gap-2">
                             <span class="flex items-center gap-2 min-w-0">
                                 <span class="size-3 rounded-full flex-shrink-0" style={`background:${slice.color};`}></span>
