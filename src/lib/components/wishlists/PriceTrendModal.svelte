@@ -148,7 +148,7 @@
 </script>
 
 <BaseModal
-    contentClass="max-w-5xl"
+    contentClass="w-[min(96vw,80rem)] max-w-6xl"
     {open}
     {trigger}
     description={$t("wishes.price-trend-description")}
@@ -172,15 +172,15 @@
             <p class="subtext">{$t("wishes.no-price-history")}</p>
         {:else}
             <div class="rounded-container border-surface-500 bg-surface-50-950 border p-2">
-                <div class="overflow-x-auto">
-                    <svg aria-label={$t("wishes.price-trend")} class="h-48 min-w-[36rem] w-full md:min-w-0" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
+                <div class="w-full">
+                    <svg aria-label={$t("wishes.price-trend")} class="h-auto w-full" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
                         <!-- Y-axis label (Price) -->
                         <text
                             x={CHART_PADDING - AXIS_LABEL_OFFSET}
                             y={CHART_HEIGHT / 2}
                             text-anchor="middle"
                             transform={`rotate(-90 ${CHART_PADDING - AXIS_LABEL_OFFSET} ${CHART_HEIGHT / 2})`}
-                            class="fill-current text-xs"
+                            class="fill-current text-[10px] sm:text-xs"
                         >
                             {$t("wishes.price-axis-label")} ({primaryCurrency})
                         </text>
@@ -190,7 +190,7 @@
                             x={CHART_WIDTH / 2}
                             y={CHART_HEIGHT - 5}
                             text-anchor="middle"
-                            class="fill-current text-xs"
+                            class="fill-current text-[10px] sm:text-xs"
                         >
                             {$t("wishes.time-axis-label")}
                         </text>
@@ -243,7 +243,7 @@
                                 <text
                                     x={tooltipX - (tooltipAnchor === "end" ? tooltipWidth - 5 : -5)}
                                     y={hoveredPoint.y - 6}
-                                    class="fill-current text-[10px] opacity-70"
+                                    class="fill-current text-[9px] opacity-70 sm:text-[10px]"
                                 >
                                     {new Date(hoveredPoint.point.polledAt).toLocaleDateString()}
                                 </text>
@@ -253,7 +253,7 @@
                 </div>
             </div>
 
-            <div class="grid gap-1 text-sm">
+            <div class="grid gap-1 text-sm break-words">
                 <span class="subtext">
                     {$t("wishes.last-price-polled")}: {formatTimestamp(history.lastPricePolledAt)}
                 </span>

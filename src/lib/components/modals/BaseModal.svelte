@@ -37,10 +37,10 @@
     <Portal>
         <ModalBackdrop />
 
-        <Dialog.Positioner class="fixed inset-0 z-50 mx-4 flex items-center justify-center">
+        <Dialog.Positioner class="fixed inset-0 z-50 p-2 sm:p-4 flex items-center justify-center">
             <ModalContent
                 class={[
-                    "max-h-3/4 data-[state=closed]:scale-90 data-[state=open]:scale-100 starting:data-[state=closed]:scale-100 starting:data-[state=open]:scale-90",
+                    "max-h-[88dvh] w-full overflow-x-hidden data-[state=closed]:scale-90 data-[state=open]:scale-100 starting:data-[state=closed]:scale-100 starting:data-[state=open]:scale-90",
                     contentClass
                 ]}
             >

@@ -53,7 +53,12 @@
     /*! purgecss start ignore */
     .ptr--icon,
     .ptr--text {
-        color: var(--color-primary-950-50);
+        color: var(--color-surface-900);
+    }
+
+    :root[data-mode="dark"] .ptr--icon,
+    :root[data-mode="dark"] .ptr--text {
+        color: var(--color-surface-50);
     }
     /*! purgecss end ignore */
 

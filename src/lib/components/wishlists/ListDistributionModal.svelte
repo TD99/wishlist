@@ -239,7 +239,7 @@
 </script>
 
 {#snippet chartBlock(title: string, slices: PieSlice[] | ProductPieSlice[] | QuantityPieSlice[])}
-    <section class="rounded-container border-surface-500 bg-surface-50-950 flex flex-col gap-3 border p-3">
+    <section class="rounded-container border-surface-500 bg-surface-50-950 flex min-w-0 flex-col gap-3 border p-3">
         <h4 class="font-semibold">{title}</h4>
         {#if slices.length === 0}
             <p class="subtext">{$t("wishes.no-price-data")}</p>
@@ -282,7 +282,7 @@
                 </div>
                 <ul class="grid min-w-0 gap-1">
                     {#each slices as slice (getSliceKey(slice))}
-                        <li class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+                        <li class="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                             <span class="flex items-center gap-2 min-w-0">
                                 <span class="size-3 rounded-full flex-shrink-0" style={`background:${slice.color};`}></span>
                                 {#if viewMode === "currency"}
@@ -293,7 +293,7 @@
                                     <span class="truncate">{(slice as QuantityPieSlice).name}</span>
                                 {/if}
                             </span>
-                            <span class="text-left sm:text-right flex-shrink-0">
+                            <span class="break-words text-left sm:text-right">
                                 {#if viewMode === "currency"}
                                     {@const currSlice = slice as PieSlice}
                                     {formatNumberAsPrice(currSlice.currency, currSlice.total)} ({(currSlice.ratio * 100).toFixed(1)}%)
@@ -314,7 +314,7 @@
 {/snippet}
 
 <BaseModal
-    contentClass="max-w-5xl"
+    contentClass="w-[min(96vw,80rem)] max-w-6xl"
     {open}
     {trigger}
     description={$t("wishes.list-distribution-description")}

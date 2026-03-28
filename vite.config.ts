@@ -21,10 +21,16 @@ const config: UserConfig = {
         sveltekit(),
         SvelteKitPWA({
             registerType: "autoUpdate",
+            includeAssets: ["favicon.ico", "apple-touch-icon.png", "fonts/*.woff", "fonts/*.woff2"],
             manifest: {
+                id: "/",
                 name: "Wishlist",
                 short_name: "Wishlist",
                 description: "Christmas wishlist you can share with the whole family.",
+                start_url: "/",
+                scope: "/",
+                display: "standalone",
+                background_color: "#1f1527",
                 theme_color: "#423654",
                 icons: [
                     {
@@ -55,7 +61,9 @@ const config: UserConfig = {
                 }
             },
             workbox: {
-                navigateFallback: "/",
+                // Prevent the plugin from auto-injecting "/" as a navigation fallback
+                // (which is not precached in adapter-node builds).
+                navigateFallback: undefined,
                 runtimeCaching: [
                     {
                         urlPattern: /\/_app\/immutable\/.+/,
@@ -79,10 +87,6 @@ const config: UserConfig = {
                             networkTimeoutSeconds: 3,
                             cacheableResponse: {
                                 statuses: [0, 200]
-                            },
-                            expiration: {
-                                maxEntries: 500,
-                                maxAgeSeconds: 60 * 60 * 24 * 365
                             }
                         }
                     },
@@ -95,10 +99,6 @@ const config: UserConfig = {
                             networkTimeoutSeconds: 3,
                             cacheableResponse: {
                                 statuses: [0, 200]
-                            },
-                            expiration: {
-                                maxEntries: 200,
-                                maxAgeSeconds: 60 * 60 * 24 * 365
                             }
                         }
                     },
@@ -111,10 +111,6 @@ const config: UserConfig = {
                             networkTimeoutSeconds: 3,
                             cacheableResponse: {
                                 statuses: [0, 200]
-                            },
-                            expiration: {
-                                maxEntries: 500,
-                                maxAgeSeconds: 60 * 60 * 24 * 365
                             }
                         }
                     },
@@ -136,8 +132,7 @@ const config: UserConfig = {
             },
             devOptions: {
                 enabled: true,
-                type: "module",
-                navigateFallback: "/"
+                type: "module"
             }
         })
     ],
