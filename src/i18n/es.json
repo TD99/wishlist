@@ -365,7 +365,14 @@
         "delete-list-confirmation": "¿Está seguro de querer eliminar esta lista? Cualquier objeto no asociado con otra lista también será eliminado.",
         "my-lists": "Mis listas",
         "no-lists-yet": "No hay listas aún",
-        "public": "Públicas"
+        "public": "Públicas",
+        "items": "artículos",
+        "view-mode-label": "Vista",
+        "view-mode-currency": "Distribución de divisas",
+        "view-mode-product": "Precio por producto",
+        "view-mode-quantity": "Cantidad por producto",
+        "price-axis-label": "Precio",
+        "time-axis-label": "Tiempo"
     },
     "app": {
         "home": "Inicio",

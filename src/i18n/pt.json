@@ -252,7 +252,14 @@
         "wishes-for": "Os desejos de {listOwner}",
         "added-by": "Adicionado por <span class=\"{class}\">{name}</span>",
         "approval-required": "{listOwner} terá de aprovar a sua sugestão antes de esta ser adicionada à sua lista.",
-        "note-placeholder": "ou seja, tamanho, cor, etc."
+        "note-placeholder": "ou seja, tamanho, cor, etc.",
+        "items": "itens",
+        "view-mode-label": "Visualização",
+        "view-mode-currency": "Distribuição de moeda",
+        "view-mode-product": "Preço por produto",
+        "view-mode-quantity": "Quantidade por produto",
+        "price-axis-label": "Preço",
+        "time-axis-label": "Tempo"
     },
     "general": {
         "save": "Guardar",

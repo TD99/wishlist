@@ -15,5 +15,14 @@
         "add-member": "Гишүүн нэмэх",
         "account": "Бүртгэл",
         "about": "Тухай"
+    },
+    "wishes": {
+        "items": "items",
+        "view-mode-label": "View",
+        "view-mode-currency": "Currency distribution",
+        "view-mode-product": "Price by product",
+        "view-mode-quantity": "Quantity by product",
+        "price-axis-label": "Price",
+        "time-axis-label": "Time"
     }
 }

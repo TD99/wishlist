@@ -420,6 +420,13 @@
         "view-wishes": "Переглянути побажання",
         "wishes-for": "Бажання {listOwner}",
         "write": "Написати",
-        "no-wishes-yet": "Немає побажань"
+        "no-wishes-yet": "Немає побажань",
+        "items": "елементи",
+        "view-mode-label": "Вигляд",
+        "view-mode-currency": "Розподіл валют",
+        "view-mode-product": "Ціна за товаром",
+        "view-mode-quantity": "Кількість за товаром",
+        "price-axis-label": "Ціна",
+        "time-axis-label": "Час"
     }
 }

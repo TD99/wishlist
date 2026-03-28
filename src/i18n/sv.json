@@ -468,7 +468,14 @@
         "show-description": "Visa beskrivning",
         "sort-by": "Sortera efter",
         "supports-markdown": "Stöder Markdown",
-        "item-created": "Artikel skapad"
+        "item-created": "Artikel skapad",
+        "items": "artiklar",
+        "view-mode-label": "Vy",
+        "view-mode-currency": "Valutafördelning",
+        "view-mode-product": "Pris per produkt",
+        "view-mode-quantity": "Antal per produkt",
+        "price-axis-label": "Pris",
+        "time-axis-label": "Tid"
     },
     "unable-to-load-icons": "Det gick inte att ladda ikoner."
 }

@@ -36,6 +36,7 @@
     const CHART_WIDTH = 720;
     const CHART_HEIGHT = 240;
     const CHART_PADDING = 26;
+    const AXIS_LABEL_OFFSET = 20;
 
     const { item, publicShareToken, trigger }: PriceTrendModalProps = $props();
     const t = getFormatter();
@@ -44,6 +45,7 @@
     let loading = $state(false);
     let history = $state<PriceHistoryResponse | null>(null);
     let errorMessage = $state<string | null>(null);
+    let hoveredPoint = $state<{ x: number; y: number; point: PricePoint } | null>(null);
 
     const listItemAPI = $derived(new ListItemAPI(item.listId, item.id, { shareToken: publicShareToken }));
 
@@ -125,6 +127,10 @@
         return value ? new Date(value).toLocaleString() : $t("general.na");
     };
 
+    const getPointKey = (point: PricePoint, index: number) => {
+        return `${point.polledAt}:${index}`;
+    };
+
     const refreshHistory = async () => {
         loading = true;
         errorMessage = null;
@@ -166,10 +172,80 @@
         {:else}
             <div class="rounded-container border-surface-500 bg-surface-50-950 border p-2">
                 <svg aria-label={$t("wishes.price-trend")} class="h-48 w-full" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
+                    <!-- Y-axis label (Price) -->
+                    <text
+                        x={CHART_PADDING - AXIS_LABEL_OFFSET}
+                        y={CHART_HEIGHT / 2}
+                        text-anchor="middle"
+                        transform={`rotate(-90 ${CHART_PADDING - AXIS_LABEL_OFFSET} ${CHART_HEIGHT / 2})`}
+                        class="fill-current text-xs"
+                    >
+                        {$t("wishes.price-axis-label")} ({primaryCurrency})
+                    </text>
+                    
+                    <!-- X-axis label (Time) -->
+                    <text
+                        x={CHART_WIDTH / 2}
+                        y={CHART_HEIGHT - 5}
+                        text-anchor="middle"
+                        class="fill-current text-xs"
+                    >
+                        {$t("wishes.time-axis-label")}
+                    </text>
+                    
+                    <!-- Chart line -->
                     <path d={pathD} fill="none" stroke="var(--color-primary-500)" stroke-width="2.5"></path>
-                    {#each coordinates as { x, y, point } (point.polledAt)}
-                        <circle cx={x} cy={y} fill="var(--color-primary-500)" r="3"></circle>
+                    
+                    <!-- Data points with hover area -->
+                    {#each coordinates as { x, y, point }, index (getPointKey(point, index))}
+                        <g>
+                            <circle cx={x} cy={y} fill="var(--color-primary-500)" r="3"></circle>
+                            <!-- Invisible larger circle for easier hover -->
+                            <circle
+                                cx={x}
+                                cy={y}
+                                r="10"
+                                fill="transparent"
+                                style="cursor: pointer;"
+                                onmouseenter={() => (hoveredPoint = { x, y, point })}
+                                onmouseleave={() => (hoveredPoint = null)}
+                                ontouchstart={() => (hoveredPoint = { x, y, point })}
+                                ontouchend={() => (hoveredPoint = null)}
+                            ></circle>
+                        </g>
                     {/each}
+                    
+                    <!-- Tooltip -->
+                    {#if hoveredPoint}
+                        {@const tooltipX = hoveredPoint.x > CHART_WIDTH / 2 ? hoveredPoint.x - 10 : hoveredPoint.x + 10}
+                        {@const tooltipAnchor = hoveredPoint.x > CHART_WIDTH / 2 ? "end" : "start"}
+                        <g>
+                            <rect
+                                x={tooltipX - (tooltipAnchor === "end" ? 150 : 0)}
+                                y={hoveredPoint.y - 30}
+                                width="150"
+                                height="26"
+                                fill="var(--color-surface-900)"
+                                stroke="var(--color-surface-500)"
+                                stroke-width="1"
+                                rx="4"
+                            ></rect>
+                            <text
+                                x={tooltipX - (tooltipAnchor === "end" ? 145 : -5)}
+                                y={hoveredPoint.y - 18}
+                                class="fill-current text-xs font-semibold"
+                            >
+                                {formatNumberAsPrice(hoveredPoint.point.currency, hoveredPoint.point.value)}
+                            </text>
+                            <text
+                                x={tooltipX - (tooltipAnchor === "end" ? 145 : -5)}
+                                y={hoveredPoint.y - 6}
+                                class="fill-current text-[10px] opacity-70"
+                            >
+                                {new Date(hoveredPoint.point.polledAt).toLocaleDateString()}
+                            </text>
+                        </g>
+                    {/if}
                 </svg>
             </div>
 

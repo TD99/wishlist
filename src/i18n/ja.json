@@ -222,5 +222,14 @@
         "must-select-a-group": "グループを選択する必要があります",
         "must-specify-an-item-to-delete": "削除する商品を指定する必要があります",
         "must-specify-asset-id": "アセットIDを指定する必要があります"
+    },
+    "wishes": {
+        "items": "items",
+        "view-mode-label": "View",
+        "view-mode-currency": "Currency distribution",
+        "view-mode-product": "Price by product",
+        "view-mode-quantity": "Quantity by product",
+        "price-axis-label": "Price",
+        "time-axis-label": "Time"
     }
 }

@@ -467,6 +467,13 @@
         "import-item": "Importeer item",
         "import-item-text": "Voordat je een item kunt importeren, moet je een groep en een lijst kiezen",
         "select-a-list": "Selecteer een lijst",
-        "item-created": "Item aangemaakt"
+        "item-created": "Item aangemaakt",
+        "items": "items",
+        "view-mode-label": "Weergave",
+        "view-mode-currency": "Valutaverdeling",
+        "view-mode-product": "Prijs per product",
+        "view-mode-quantity": "Hoeveelheid per product",
+        "price-axis-label": "Prijs",
+        "time-axis-label": "Tijd"
     }
 }
