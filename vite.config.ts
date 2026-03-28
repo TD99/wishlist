@@ -54,6 +54,86 @@ const config: UserConfig = {
                     }
                 }
             },
+            workbox: {
+                navigateFallback: "/",
+                runtimeCaching: [
+                    {
+                        urlPattern: /\/_app\/immutable\/.+/,
+                        handler: "CacheFirst",
+                        options: {
+                            cacheName: "wishlist-app-assets",
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            },
+                            expiration: {
+                                maxEntries: 300,
+                                maxAgeSeconds: 60 * 60 * 24 * 365
+                            }
+                        }
+                    },
+                    {
+                        urlPattern: /\/__data\.json(?:\?.*)?$/,
+                        handler: "NetworkFirst",
+                        options: {
+                            cacheName: "wishlist-route-data",
+                            networkTimeoutSeconds: 3,
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            },
+                            expiration: {
+                                maxEntries: 500,
+                                maxAgeSeconds: 60 * 60 * 24 * 365
+                            }
+                        }
+                    },
+                    {
+                        urlPattern: /\/(?!api\/|_app\/|.*\.[a-zA-Z0-9]+$).*/,
+                        method: "GET",
+                        handler: "NetworkFirst",
+                        options: {
+                            cacheName: "wishlist-pages",
+                            networkTimeoutSeconds: 3,
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            },
+                            expiration: {
+                                maxEntries: 200,
+                                maxAgeSeconds: 60 * 60 * 24 * 365
+                            }
+                        }
+                    },
+                    {
+                        urlPattern: /\/api\/.+/,
+                        method: "GET",
+                        handler: "NetworkFirst",
+                        options: {
+                            cacheName: "wishlist-api-get",
+                            networkTimeoutSeconds: 3,
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            },
+                            expiration: {
+                                maxEntries: 500,
+                                maxAgeSeconds: 60 * 60 * 24 * 365
+                            }
+                        }
+                    },
+                    {
+                        urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif|ico)$/i,
+                        handler: "StaleWhileRevalidate",
+                        options: {
+                            cacheName: "wishlist-images",
+                            cacheableResponse: {
+                                statuses: [0, 200]
+                            },
+                            expiration: {
+                                maxEntries: 300,
+                                maxAgeSeconds: 60 * 60 * 24 * 365
+                            }
+                        }
+                    }
+                ]
+            },
             devOptions: {
                 enabled: true,
                 type: "module",

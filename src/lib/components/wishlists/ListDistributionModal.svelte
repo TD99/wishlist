@@ -244,9 +244,9 @@
         {#if slices.length === 0}
             <p class="subtext">{$t("wishes.no-price-data")}</p>
         {:else}
-            <div class="grid gap-3 lg:grid-cols-[10rem_1fr]">
-                <div class="relative mx-auto size-40">
-                    <svg aria-label={title} class="size-40" viewBox="0 0 120 120">
+            <div class="grid gap-3 md:grid-cols-[10rem_minmax(0,1fr)]">
+                <div class="relative mx-auto size-40 md:size-44">
+                    <svg aria-label={title} class="size-40 md:size-44" viewBox="0 0 120 120">
                         {#each slices as slice (getSliceKey(slice))}
                             <path
                                 d={toSlicePath(slice, 60, 60, 52)}
@@ -280,9 +280,9 @@
                         </div>
                     {/if}
                 </div>
-                <ul class="grid gap-1">
+                <ul class="grid min-w-0 gap-1">
                     {#each slices as slice (getSliceKey(slice))}
-                        <li class="flex items-center justify-between gap-2">
+                        <li class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                             <span class="flex items-center gap-2 min-w-0">
                                 <span class="size-3 rounded-full flex-shrink-0" style={`background:${slice.color};`}></span>
                                 {#if viewMode === "currency"}
@@ -293,7 +293,7 @@
                                     <span class="truncate">{(slice as QuantityPieSlice).name}</span>
                                 {/if}
                             </span>
-                            <span class="text-right flex-shrink-0">
+                            <span class="text-left sm:text-right flex-shrink-0">
                                 {#if viewMode === "currency"}
                                     {@const currSlice = slice as PieSlice}
                                     {formatNumberAsPrice(currSlice.currency, currSlice.total)} ({(currSlice.ratio * 100).toFixed(1)}%)
@@ -314,6 +314,7 @@
 {/snippet}
 
 <BaseModal
+    contentClass="max-w-5xl"
     {open}
     {trigger}
     description={$t("wishes.list-distribution-description")}
@@ -321,12 +322,12 @@
     title={$t("wishes.list-distribution")}
 >
     {#snippet children()}
-        <div class="mb-4 flex items-center gap-2">
+        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
             <label for="view-mode" class="font-semibold">{$t("wishes.view-mode-label")}:</label>
             <select
                 id="view-mode"
                 bind:value={viewMode}
-                class="rounded-lg border border-surface-500 bg-surface-50-950 px-3 py-2"
+                class="w-full sm:w-auto rounded-lg border border-surface-500 bg-surface-50-950 px-3 py-2"
             >
                 <option value="product">{$t("wishes.view-mode-product")}</option>
                 <option value="currency">{$t("wishes.view-mode-currency")}</option>
