@@ -468,7 +468,14 @@
         "show-description": "Visa beskrivning",
         "sort-by": "Sortera efter",
         "supports-markdown": "Stöder Markdown",
-        "item-created": "Artikel skapad"
+        "item-created": "Artikel skapad",
+        "items": "items",
+        "view-mode-label": "View",
+        "view-mode-currency": "Currency distribution",
+        "view-mode-product": "Price by product",
+        "view-mode-quantity": "Quantity by product",
+        "price-axis-label": "Price",
+        "time-axis-label": "Time"
     },
     "unable-to-load-icons": "Det gick inte att ladda ikoner."
 }

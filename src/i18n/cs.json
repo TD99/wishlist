@@ -467,6 +467,13 @@
         "import-item": "Importovat položku",
         "import-item-text": "Před importem vyberte skupinu a seznam",
         "select-a-list": "Vybrat seznam",
-        "item-created": "Položka vytvořena"
+        "item-created": "Položka vytvořena",
+        "items": "items",
+        "view-mode-label": "View",
+        "view-mode-currency": "Currency distribution",
+        "view-mode-product": "Price by product",
+        "view-mode-quantity": "Quantity by product",
+        "price-axis-label": "Price",
+        "time-axis-label": "Time"
     }
 }

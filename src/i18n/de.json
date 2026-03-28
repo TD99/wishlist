@@ -243,7 +243,14 @@
         "import-error-title": "Artikel konnte nicht importiert werden",
         "import-item": "Importiere Artikel",
         "import-item-text": "Bevor ein Artikel importiert werden kann, muss eine Gruppe und eine Liste ausgewählt werden",
-        "select-a-list": "Liste auswählen"
+        "select-a-list": "Liste auswählen",
+        "items": "items",
+        "view-mode-label": "View",
+        "view-mode-currency": "Currency distribution",
+        "view-mode-product": "Price by product",
+        "view-mode-quantity": "Quantity by product",
+        "price-axis-label": "Price",
+        "time-axis-label": "Time"
     },
     "errors": {
         "group-is-not-in-registry-mode-cannot-get-a-public-link": "Gruppe ist nicht im Registermodus. Kein öffentlicher Link vorhanden",

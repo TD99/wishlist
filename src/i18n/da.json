@@ -434,7 +434,14 @@
         "switch-to-list-view": "Skift til listevisning",
         "switch-to-tile-view": "Skift til flisevisning",
         "tile-view": "Flisevisning",
-        "most-wanted-description": "Markér dette ønske for at vise at det er højt prioriteret."
+        "most-wanted-description": "Markér dette ønske for at vise at det er højt prioriteret.",
+        "items": "items",
+        "view-mode-label": "View",
+        "view-mode-currency": "Currency distribution",
+        "view-mode-product": "Price by product",
+        "view-mode-quantity": "Quantity by product",
+        "price-axis-label": "Price",
+        "time-axis-label": "Time"
     },
     "setup": {
         "global-settings-subtext": "Disse indstillinger vil blive anvendt til alle grupper, der er oprettet. Nogle indstillinger kan overskrives af individuelle grupper.",

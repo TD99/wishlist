@@ -466,7 +466,14 @@
         "import-item": "Importer l'élément",
         "import-item-text": "Avant d'importer un élément, vous devez choisir un groupe et une liste",
         "select-a-list": "Sélectionner une liste",
-        "item-created": "Elément créé"
+        "item-created": "Elément créé",
+        "items": "items",
+        "view-mode-label": "View",
+        "view-mode-currency": "Currency distribution",
+        "view-mode-product": "Price by product",
+        "view-mode-quantity": "Quantity by product",
+        "price-axis-label": "Price",
+        "time-axis-label": "Time"
     },
     "unable-to-load-icons": "Impossible de charger les icônes."
 }

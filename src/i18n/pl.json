@@ -247,7 +247,14 @@
         "are-you-sure-you-wish-to-delete-item-multiple-lists": "Czy chcesz usunąć <b>{name}</b> z tej i wszystkich innych list?",
         "item-was-removed-from-list": "Usunięto {name} z listy",
         "my-lists": "Moja Listy",
-        "no-lists-yet": "Brak list"
+        "no-lists-yet": "Brak list",
+        "items": "items",
+        "view-mode-label": "View",
+        "view-mode-currency": "Currency distribution",
+        "view-mode-product": "Price by product",
+        "view-mode-quantity": "Quantity by product",
+        "price-axis-label": "Price",
+        "time-axis-label": "Time"
     },
     "a11y": {
         "refresh-item-data": "odśwież dane przedmiotu",
