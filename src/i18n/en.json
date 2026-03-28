@@ -507,6 +507,13 @@
         "view-item": "View Item",
         "view-wishes": "View Wishes",
         "wishes-for": "{listOwner}'s Wishes",
-        "write": "Write"
+        "write": "Write",
+        "items": "items",
+        "view-mode-label": "View",
+        "view-mode-currency": "Currency distribution",
+        "view-mode-product": "Price by product",
+        "view-mode-quantity": "Quantity by product",
+        "price-axis-label": "Price",
+        "time-axis-label": "Time"
     }
 }
