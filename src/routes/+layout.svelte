@@ -16,6 +16,7 @@
     import { navItems } from "$lib/components/navigation/navigation";
     import { setFormatter, setLocale } from "$lib/i18n";
     import Toaster from "$lib/components/toaster/Toaster.svelte";
+    import { getFormatter } from "$lib/i18n";
 
     const { data, children }: LayoutProps = $props();
 
@@ -30,6 +31,7 @@
     let showNavigationLoadingBar = $state(false);
     let documentTitle: string | undefined = $state();
     let disabled = $state(false);
+    let isOnline = $state(true);
     const fallbackFormatter = readable((id: string) => id);
 
     const titleDisabledUrls = [
@@ -154,12 +156,43 @@
         };
 
         const handleOnline = () => {
+            isOnline = true;
             void warmOfflineCache();
         };
+
+        const handleOffline = () => {
+            isOnline = false;
+        };
+
+        // Initialize online state
+        isOnline = navigator.onLine;
+
+        // Check connection status periodically (every 10 seconds)
+        const connectionCheckInterval = setInterval(() => {
+            const currentStatus = navigator.onLine;
+            if (currentStatus !== isOnline) {
+                isOnline = currentStatus;
+                if (currentStatus) {
+                    void warmOfflineCache();
+                }
+            }
+        }, 10000);
+
+        // Prevent form submissions when offline
+        const handleFormSubmit = async (event: Event) => {
+            if (!navigator.onLine) {
+                event.preventDefault();
+                const { toaster } = await import("$lib/components/toaster");
+                toaster.warning({ description: $t("errors.offline-banner-message") });
+            }
+        };
+
+        document.addEventListener("submit", handleFormSubmit);
 
         window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
         window.addEventListener("appinstalled", handleAppInstalled);
         window.addEventListener("online", handleOnline);
+        window.addEventListener("offline", handleOffline);
 
         if ("serviceWorker" in navigator) {
             void navigator.serviceWorker.ready.then(() => warmOfflineCache());
@@ -245,9 +278,12 @@
             if (installPromptFallbackTimeout !== undefined) {
                 window.clearTimeout(installPromptFallbackTimeout);
             }
+            clearInterval(connectionCheckInterval);
+            document.removeEventListener("submit", handleFormSubmit);
             window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
             window.removeEventListener("appinstalled", handleAppInstalled);
             window.removeEventListener("online", handleOnline);
+            window.removeEventListener("offline", handleOffline);
         };
     });
 
@@ -268,18 +304,39 @@
         }
     });
 
-    const webManifestLink = $derived(pwaInfo?.webManifest.linkTag ?? '<link rel="manifest" href="/manifest.webmanifest">');
+    const webManifestLink = $derived(
+        pwaInfo?.webManifest.linkTag ?? '<link rel="manifest" href="/manifest.webmanifest">'
+    );
 
     let footerHeight: number | undefined = $state();
     let toasterYShift: number | undefined = $derived(footerHeight && footerHeight + 12);
+    const t = getFormatter();
 </script>
 
 <div class="min-h-screen">
     <header class="sticky top-0 z-15 print:hidden">
+        {#if !isOnline}
+            <div
+                class="preset-tonal-warning border-warning-500 flex items-center justify-between border-b px-4 py-3 md:px-12 lg:px-32 xl:px-56"
+            >
+                <div class="flex items-center gap-x-3">
+                    <iconify-icon class="text-2xl" icon="ion:cloud-offline"></iconify-icon>
+                    <div>
+                        <p class="font-semibold">{$t("errors.offline-banner-title")}</p>
+                        <p class="text-sm opacity-80">{$t("errors.offline-banner-message")}</p>
+                    </div>
+                </div>
+            </div>
+        {/if}
         {#if showNavigationLoadingBar}
             <NavigationLoadingBar />
         {/if}
-        <NavBar groups={data?.groups ?? null} isProxyUser={data?.isProxyUser ?? false} {navItems} user={data?.user ?? null} />
+        <NavBar
+            groups={data?.groups ?? null}
+            isProxyUser={data?.isProxyUser ?? false}
+            {navItems}
+            user={data?.user ?? null}
+        />
     </header>
 
     <main id="main" class="h-full min-h-screen px-4 py-4 md:px-12 lg:px-32 xl:px-56">
@@ -295,7 +352,9 @@
 </div>
 
 {#if !$isInstalled && (deferredInstallPrompt || showManualInstallPrompt)}
-    <aside class="rounded-container bg-surface-100-900 border-surface-500 fixed right-4 bottom-28 z-20 max-w-72 border p-3 shadow-xl md:bottom-32">
+    <aside
+        class="rounded-container bg-surface-100-900 border-surface-500 fixed right-4 bottom-28 z-20 max-w-72 border p-3 shadow-xl md:bottom-32"
+    >
         <p class="font-semibold">Install Wishlist</p>
         {#if deferredInstallPrompt}
             <p class="subtext pt-1">Use the app offline and keep your data available without a connection.</p>
@@ -309,8 +368,10 @@
                     deferredInstallPrompt = null;
                     showManualInstallPrompt = false;
                 }}
-                type="button">Later</button
+                type="button"
             >
+                Later
+            </button>
             {#if deferredInstallPrompt}
                 <button class="preset-filled btn btn-xs" onclick={promptInstall} type="button">Install</button>
             {/if}

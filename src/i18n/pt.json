@@ -181,7 +181,11 @@
         "unable-to-find-product-information": "Não é possível encontrar informações sobre o produto. Pode ainda preencher os dados manualmente.",
         "username-already-in-use": "{username} já está a ser utilizado",
         "user-not-found": "Utilizador não encontrado",
-        "must-specify-url-in-query-parameters": "Deve especificar o url nos parâmetros de consulta"
+        "must-specify-url-in-query-parameters": "Deve especificar o url nos parâmetros de consulta",
+        "offline-title": "Você está Offline",
+        "offline-message": "Esta página não está disponível offline. Verifique sua conexão e tente novamente.",
+        "offline-banner-title": "Sem Conexão com a Internet",
+        "offline-banner-message": "Alguns recursos podem não estar disponíveis enquanto você está offline"
     },
     "setup": {
         "global-settings": "Definições globais",

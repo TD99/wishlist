@@ -227,7 +227,11 @@
         "unable-to-update-preferred-language": "Kunne ikke oppdatere det foretrukne språket",
         "email-is-required-for-public-claims": "E-postadresse kreves for å offentlig kunne gjøre krav på et ønske",
         "display-order-invalid": "Visningsrekkefølgen må være mellom {min} og {max}",
-        "oidc-error": "Kunne ikke autentisere med OAuth"
+        "oidc-error": "Kunne ikke autentisere med OAuth",
+        "offline-title": "Du er Offline",
+        "offline-message": "Denne siden er ikke tilgjengelig offline. Kontroller tilkoblingen din og prøv igjen.",
+        "offline-banner-title": "Ingen Internettilkobling",
+        "offline-banner-message": "Noen funksjoner er kanskje ikke tilgjengelige når du er offline"
     },
     "a11y": {
         "a-person-looking-at-an-empty-board": "En person som ser på en tom tavle",

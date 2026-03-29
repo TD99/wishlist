@@ -63,7 +63,9 @@
     let disablePricePolling = $state(false);
     let submitSrc = $state("submit");
     let selectedDependencyIds = $derived(new Set(productData.dependencyIds || []));
-    let matchingDependencyOptions = $derived(dependencyOptions.filter((dependency) => dependency.optional === isOptional));
+    let matchingDependencyOptions = $derived(
+        dependencyOptions.filter((dependency) => dependency.optional === isOptional)
+    );
 
     const listsHavingItem = $derived.by(() => {
         return productData.lists
@@ -179,7 +181,6 @@
     $effect(() => {
         disablePricePolling = itemPollingDisabled;
     });
-
 </script>
 
 <div class="grid grid-cols-7 gap-4">
@@ -373,7 +374,7 @@
         <span class="subtext">{$t("wishes.depends-on-description")}</span>
 
         <div
-            class="border-surface-500 rounded-container flex max-h-48 flex-col space-y-2 overflow-auto border p-2"
+            class="border-surface-500 rounded-container flex max-h-48 flex-col space-y-2 overflow-y-auto border p-2"
             class:input-invalid={form?.errors?.dependsOnIds}
         >
             {#each matchingDependencyOptions as dependency (dependency.id)}

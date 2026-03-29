@@ -18,7 +18,9 @@ export const load = (async ({ params, url, locals, depends, cookies }) => {
     const user = locals.user;
 
     const list = await getByIdForAccess(params.id);
-    const shareValidation = list ? await validateListShareToken(list, shareToken) : { valid: false, shareLinkId: undefined };
+    const shareValidation = list
+        ? await validateListShareToken(list, shareToken)
+        : { valid: false, shareLinkId: undefined };
     const hasValidShareToken = shareValidation.valid;
 
     let activeMembership: UserGroupMembership | undefined;

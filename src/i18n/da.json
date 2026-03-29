@@ -256,7 +256,11 @@
         "username-must-not-be-blank": "Brugernavn må ikke være blank",
         "valid-url-not-provided": "Gyldig url ikke angivet",
         "email-is-required-for-public-claims": "E-mail er påkrævet for offentlige reservationer",
-        "oidc-error": "OAuth-godkendelse fejlede"
+        "oidc-error": "OAuth-godkendelse fejlede",
+        "offline-title": "Du er Offline",
+        "offline-message": "Denne side er ikke tilgængelig offline. Kontroller venligst din forbindelse og prøv igen.",
+        "offline-banner-title": "Ingen Internetforbindelse",
+        "offline-banner-message": "Nogle funktioner er muligvis ikke tilgængelige, mens du er offline"
     },
     "general": {
         "smtp-not-enabled-implication": "Selvom opsætning af e-mail ikke er et krav, vil brugere ikke kunne nulstille deres adgangskoder via selvbetjening, og du vil selv skulle sende links til nulstilling af adgangskoder.",

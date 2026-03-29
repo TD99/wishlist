@@ -244,7 +244,11 @@
         "username-must-not-be-blank": "Ім'я користувача не може бути порожнім",
         "valid-url-not-provided": "Не вказано дійсної URL-адреси",
         "product-information-not-available": "Інформація про товар недоступна",
-        "email-is-required-for-public-claims": "Електронна адреса обов’язкова для публічних заявок"
+        "email-is-required-for-public-claims": "Електронна адреса обов'язкова для публічних заявок",
+        "offline-title": "Ви Офлайн",
+        "offline-message": "Ця сторінка недоступна офлайн. Будь ласка, перевірте з'єднання та спробуйте ще раз.",
+        "offline-banner-title": "Немає Інтернет-з'єднання",
+        "offline-banner-message": "Деякі функції можуть бути недоступні, коли ви офлайн"
     },
     "general": {
         "add-a-description": "Додати опис",

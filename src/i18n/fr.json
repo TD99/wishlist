@@ -71,7 +71,11 @@
         "language-is-required": "La langue est requise",
         "email-is-required-for-public-claims": "Un email est nécessaire pour des réservation publiques",
         "oidc-error": "Erreur lors de l'authentification OAuth",
-        "display-order-invalid": "L'ordre d'affichage doit être entre {min} et {max}"
+        "display-order-invalid": "L'ordre d'affichage doit être entre {min} et {max}",
+        "offline-title": "Vous êtes Hors Ligne",
+        "offline-message": "Cette page n'est pas disponible hors ligne. Veuillez vérifier votre connexion et réessayer.",
+        "offline-banner-title": "Pas de Connexion Internet",
+        "offline-banner-message": "Certaines fonctionnalités peuvent ne pas être disponibles lorsque vous êtes hors ligne"
     },
     "admin": {
         "version": "Version : <a class=\"{class}\" href=\"{href}\">{version}</a>",

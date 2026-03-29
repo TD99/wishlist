@@ -258,7 +258,11 @@
         "valid-url-not-provided": "Geldige url niet verstrekt",
         "email-is-required-for-public-claims": "Email is vereist voor publieke claims",
         "oidc-error": "Authenticeren met OAuth is mislukt",
-        "display-order-invalid": "Volgorde van weergave dient tussen {min} en {max} te zijn"
+        "display-order-invalid": "Volgorde van weergave dient tussen {min} en {max} te zijn",
+        "offline-title": "U bent Offline",
+        "offline-message": "Deze pagina is offline niet beschikbaar. Controleer uw verbinding en probeer het opnieuw.",
+        "offline-banner-title": "Geen Internetverbinding",
+        "offline-banner-message": "Sommige functies zijn mogelijk niet beschikbaar terwijl u offline bent"
     },
     "general": {
         "add-a-description": "Voeg een beschrijving toe",

@@ -117,12 +117,8 @@
     };
 
     const updateDisplayOrder = (approvedItems: ItemOnListDTO[]) => {
-        approvedItems
-            .filter((item) => !item.optional)
-            .forEach((item, idx) => (item.displayOrder = idx));
-        approvedItems
-            .filter((item) => item.optional)
-            .forEach((item, idx) => (item.displayOrder = idx));
+        approvedItems.filter((item) => !item.optional).forEach((item, idx) => (item.displayOrder = idx));
+        approvedItems.filter((item) => item.optional).forEach((item, idx) => (item.displayOrder = idx));
     };
 
     const groupByClaimState = (items: ItemOnListDTO[]) => {
@@ -296,7 +292,9 @@
     };
 
     const getDependencyLevel = (item: ItemOnListDTO) => {
-        return item.optional ? (optionalOrdering.levels.get(item.id) ?? 0) : (requiredOrdering.levels.get(item.id) ?? 0);
+        return item.optional
+            ? (optionalOrdering.levels.get(item.id) ?? 0)
+            : (requiredOrdering.levels.get(item.id) ?? 0);
     };
     const swap = (arr: ItemOnListDTO[], a: number, b: number): ItemOnListDTO[] => {
         const swapped = arr.with(a, arr[b]).with(b, arr[a]);
@@ -458,7 +456,9 @@
                 {#each shareLinks as link (link.id)}
                     <div class="rounded-base bg-surface-100-900 flex items-center justify-between gap-2 p-2">
                         <div class="min-w-0">
-                            <p class="font-mono text-xs">{$t("wishes.shared-link-hint", { values: { hint: link.tokenHint } })}</p>
+                            <p class="font-mono text-xs">
+                                {$t("wishes.shared-link-hint", { values: { hint: link.tokenHint } })}
+                            </p>
                             <p class="subtext text-xs">
                                 {$t("wishes.shared-link-meta", {
                                     values: {

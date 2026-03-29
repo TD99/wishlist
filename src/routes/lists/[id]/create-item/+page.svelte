@@ -11,9 +11,9 @@
     const { data }: PageProps = $props();
     const t = getFormatter();
 
-    let itemData: (Pick<Item, "name" | "price" | "url" | "note" | "imageUrl" | "pricePollingEnabled"> & {
+    let itemData: Pick<Item, "name" | "price" | "url" | "note" | "imageUrl" | "pricePollingEnabled"> & {
         dependencyIds?: number[];
-    }) = {
+    } = {
         name: "",
         price: null,
         url: null,

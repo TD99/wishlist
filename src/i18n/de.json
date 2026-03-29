@@ -324,7 +324,11 @@
         "unable-to-update-preferred-language": "Ändern der bevorzugten Sprache nicht möglich",
         "email-is-required-for-public-claims": "Email Adresse ist notwendig für öffentliche Beanspruchung",
         "oidc-error": "Authentifizierung mit OAuth fehlgeschlagen",
-        "display-order-invalid": "Die Anzeigereihenfolge muss zwischen {min} und {max} liegen"
+        "display-order-invalid": "Die Anzeigereihenfolge muss zwischen {min} und {max} liegen",
+        "offline-title": "Sie sind Offline",
+        "offline-message": "Diese Seite ist offline nicht verfügbar. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+        "offline-banner-title": "Keine Internetverbindung",
+        "offline-banner-message": "Einige Funktionen sind möglicherweise nicht verfügbar, während Sie offline sind"
     },
     "auth": {
         "return-to-login": "Zurück zur Anmeldung",

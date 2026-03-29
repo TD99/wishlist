@@ -88,7 +88,8 @@
         const contentHeight = CHART_HEIGHT - CHART_PADDING * 2;
 
         return points.map((point, index) => {
-            const x = CHART_PADDING + (points.length === 1 ? contentWidth / 2 : (index / (points.length - 1)) * contentWidth);
+            const x =
+                CHART_PADDING + (points.length === 1 ? contentWidth / 2 : (index / (points.length - 1)) * contentWidth);
             const y = CHART_PADDING + contentHeight - ((point.value - valueRange.min) / span) * contentHeight;
 
             return { x, y, point };
@@ -173,7 +174,11 @@
         {:else}
             <div class="rounded-container border-surface-500 bg-surface-50-950 border p-2">
                 <div class="w-full">
-                    <svg aria-label={$t("wishes.price-trend")} class="h-auto w-full" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
+                    <svg
+                        aria-label={$t("wishes.price-trend")}
+                        class="h-auto w-full"
+                        viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+                    >
                         <!-- Y-axis label (Price) -->
                         <text
                             x={CHART_PADDING - AXIS_LABEL_OFFSET}
@@ -184,7 +189,7 @@
                         >
                             {$t("wishes.price-axis-label")} ({primaryCurrency})
                         </text>
-                        
+
                         <!-- X-axis label (Time) -->
                         <text
                             x={CHART_WIDTH / 2}
@@ -194,10 +199,10 @@
                         >
                             {$t("wishes.time-axis-label")}
                         </text>
-                        
+
                         <!-- Chart line -->
                         <path d={pathD} fill="none" stroke="var(--color-primary-500)" stroke-width="2.5"></path>
-                        
+
                         <!-- Data points with hover area -->
                         {#each coordinates as { x, y, point }, index (getPointKey(point, index))}
                             <g>
@@ -216,11 +221,12 @@
                                 ></circle>
                             </g>
                         {/each}
-                        
+
                         <!-- Tooltip -->
                         {#if hoveredPoint}
                             {@const tooltipWidth = 136}
-                            {@const tooltipX = hoveredPoint.x > CHART_WIDTH / 2 ? hoveredPoint.x - 10 : hoveredPoint.x + 10}
+                            {@const tooltipX =
+                                hoveredPoint.x > CHART_WIDTH / 2 ? hoveredPoint.x - 10 : hoveredPoint.x + 10}
                             {@const tooltipAnchor = hoveredPoint.x > CHART_WIDTH / 2 ? "end" : "start"}
                             <g>
                                 <rect

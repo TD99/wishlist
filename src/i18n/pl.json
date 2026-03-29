@@ -64,7 +64,11 @@
         "must-select-a-group": "Musisz wybrać grupę",
         "no-email-provided": "Nie podano emaila",
         "an-item-must-be-added-to-at-least-one-list": "Przedmiot musi być dodany do conajmniej jednej listy",
-        "item-not-found-on-list": "Nie znaleziono przedmiotu"
+        "item-not-found-on-list": "Nie znaleziono przedmiotu",
+        "offline-title": "Jesteś Offline",
+        "offline-message": "Ta strona nie jest dostępna w trybie offline. Sprawdź połączenie i spróbuj ponownie.",
+        "offline-banner-title": "Brak Połączenia Internetowego",
+        "offline-banner-message": "Niektóre funkcje mogą być niedostępne, gdy jesteś offline"
     },
     "general": {
         "weak": "Słabe",

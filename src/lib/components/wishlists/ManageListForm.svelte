@@ -11,8 +11,9 @@
     import ConfirmModal from "../modals/ConfirmModal.svelte";
     import SelectListManagerModal from "../modals/SelectListManagerModal.svelte";
 
-interface ListProps
-        extends Partial<Pick<List, "id" | "icon" | "iconColor" | "name" | "public" | "description" | "pricePollingEnabled">> {
+    interface ListProps extends Partial<
+        Pick<List, "id" | "icon" | "iconColor" | "name" | "public" | "description" | "pricePollingEnabled">
+    > {
         pricePollIntervalMinutes: number;
         owner: Pick<User, "id" | "name" | "username" | "picture">;
         managers: Pick<User, "id" | "name" | "username">[];
