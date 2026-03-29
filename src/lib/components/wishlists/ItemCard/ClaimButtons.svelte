@@ -53,13 +53,7 @@
 {:else if userClaim}
     {#if isClaimOnList}
         <div class="flex flex-row items-center gap-2">
-            <ClaimItemModal
-                claimId={userClaim.claimId}
-                {item}
-                {publicShareToken}
-                {requireClaimEmail}
-                userId={user?.id}
-            >
+            <ClaimItemModal claimId={userClaim.claimId} {item} {publicShareToken} {requireClaimEmail} userId={user?.id}>
                 {#snippet trigger(props)}
                     <button
                         {...props}

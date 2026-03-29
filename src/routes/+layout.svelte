@@ -178,6 +178,17 @@
             }
         }, 10000);
 
+        // Prevent form submissions when offline
+        const handleFormSubmit = async (event: Event) => {
+            if (!navigator.onLine) {
+                event.preventDefault();
+                const { toaster } = await import("$lib/components/toaster");
+                toaster.warning({ description: $t("errors.offline-banner-message") });
+            }
+        };
+
+        document.addEventListener("submit", handleFormSubmit);
+
         window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
         window.addEventListener("appinstalled", handleAppInstalled);
         window.addEventListener("online", handleOnline);
@@ -268,6 +279,7 @@
                 window.clearTimeout(installPromptFallbackTimeout);
             }
             clearInterval(connectionCheckInterval);
+            document.removeEventListener("submit", handleFormSubmit);
             window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
             window.removeEventListener("appinstalled", handleAppInstalled);
             window.removeEventListener("online", handleOnline);
@@ -292,7 +304,9 @@
         }
     });
 
-    const webManifestLink = $derived(pwaInfo?.webManifest.linkTag ?? '<link rel="manifest" href="/manifest.webmanifest">');
+    const webManifestLink = $derived(
+        pwaInfo?.webManifest.linkTag ?? '<link rel="manifest" href="/manifest.webmanifest">'
+    );
 
     let footerHeight: number | undefined = $state();
     let toasterYShift: number | undefined = $derived(footerHeight && footerHeight + 12);
@@ -302,7 +316,9 @@
 <div class="min-h-screen">
     <header class="sticky top-0 z-15 print:hidden">
         {#if !isOnline}
-            <div class="preset-tonal-warning border-warning-500 flex items-center justify-between border-b px-4 py-3 md:px-12 lg:px-32 xl:px-56">
+            <div
+                class="preset-tonal-warning border-warning-500 flex items-center justify-between border-b px-4 py-3 md:px-12 lg:px-32 xl:px-56"
+            >
                 <div class="flex items-center gap-x-3">
                     <iconify-icon class="text-2xl" icon="ion:cloud-offline"></iconify-icon>
                     <div>
@@ -315,7 +331,12 @@
         {#if showNavigationLoadingBar}
             <NavigationLoadingBar />
         {/if}
-        <NavBar groups={data?.groups ?? null} isProxyUser={data?.isProxyUser ?? false} {navItems} user={data?.user ?? null} />
+        <NavBar
+            groups={data?.groups ?? null}
+            isProxyUser={data?.isProxyUser ?? false}
+            {navItems}
+            user={data?.user ?? null}
+        />
     </header>
 
     <main id="main" class="h-full min-h-screen px-4 py-4 md:px-12 lg:px-32 xl:px-56">
@@ -331,7 +352,9 @@
 </div>
 
 {#if !$isInstalled && (deferredInstallPrompt || showManualInstallPrompt)}
-    <aside class="rounded-container bg-surface-100-900 border-surface-500 fixed right-4 bottom-28 z-20 max-w-72 border p-3 shadow-xl md:bottom-32">
+    <aside
+        class="rounded-container bg-surface-100-900 border-surface-500 fixed right-4 bottom-28 z-20 max-w-72 border p-3 shadow-xl md:bottom-32"
+    >
         <p class="font-semibold">Install Wishlist</p>
         {#if deferredInstallPrompt}
             <p class="subtext pt-1">Use the app offline and keep your data available without a connection.</p>
@@ -345,8 +368,10 @@
                     deferredInstallPrompt = null;
                     showManualInstallPrompt = false;
                 }}
-                type="button">Later</button
+                type="button"
             >
+                Later
+            </button>
             {#if deferredInstallPrompt}
                 <button class="preset-filled btn btn-xs" onclick={promptInstall} type="button">Install</button>
             {/if}

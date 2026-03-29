@@ -53,16 +53,7 @@
         end: number;
     }
 
-    const PIE_COLORS = [
-        "#2563EB",
-        "#059669",
-        "#F59E0B",
-        "#DC2626",
-        "#7C3AED",
-        "#0EA5E9",
-        "#F97316",
-        "#14B8A6"
-    ];
+    const PIE_COLORS = ["#2563EB", "#059669", "#F59E0B", "#DC2626", "#7C3AED", "#0EA5E9", "#F97316", "#14B8A6"];
 
     const { items, trigger }: ListDistributionModalProps = $props();
     const t = getFormatter();
@@ -105,11 +96,14 @@
 
     const getQuantitiesByProduct = (source: ItemOnListDTO[]) => {
         return source
-            .map((item) => ({
-                id: item.id,
-                name: item.name,
-                quantity: item.quantity || 1
-            } satisfies QuantityTotal))
+            .map(
+                (item) =>
+                    ({
+                        id: item.id,
+                        name: item.name,
+                        quantity: item.quantity || 1
+                    }) satisfies QuantityTotal
+            )
             .toSorted((a, b) => b.quantity - a.quantity);
     };
 
@@ -181,7 +175,12 @@
         };
     };
 
-    const toSlicePath = (slice: { ratio: number; start: number; end: number }, cx: number, cy: number, radius: number) => {
+    const toSlicePath = (
+        slice: { ratio: number; start: number; end: number },
+        cx: number,
+        cy: number,
+        radius: number
+    ) => {
         if (slice.ratio >= 0.9999) {
             return `M ${cx} ${cy} m -${radius} 0 a ${radius} ${radius} 0 1 0 ${radius * 2} 0 a ${radius} ${radius} 0 1 0 -${radius * 2} 0`;
         }
@@ -260,7 +259,9 @@
                         {/each}
                     </svg>
                     {#if hoveredSlice}
-                        <div class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface-900 px-3 py-2 text-center text-xs shadow-lg border border-surface-500">
+                        <div
+                            class="bg-surface-900 border-surface-500 pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg border px-3 py-2 text-center text-xs shadow-lg"
+                        >
                             {#if viewMode === "currency"}
                                 {@const currSlice = hoveredSlice as PieSlice}
                                 <div class="font-semibold">{currSlice.currency}</div>
@@ -268,12 +269,12 @@
                                 <div class="opacity-70">{(currSlice.ratio * 100).toFixed(1)}%</div>
                             {:else if viewMode === "product"}
                                 {@const prodSlice = hoveredSlice as ProductPieSlice}
-                                <div class="font-semibold max-w-[150px] truncate">{prodSlice.name}</div>
+                                <div class="max-w-[150px] truncate font-semibold">{prodSlice.name}</div>
                                 <div>{formatNumberAsPrice(prodSlice.currency, prodSlice.total)}</div>
                                 <div class="opacity-70">{(prodSlice.ratio * 100).toFixed(1)}%</div>
                             {:else if viewMode === "quantity"}
                                 {@const qtySlice = hoveredSlice as QuantityPieSlice}
-                                <div class="font-semibold max-w-[150px] truncate">{qtySlice.name}</div>
+                                <div class="max-w-[150px] truncate font-semibold">{qtySlice.name}</div>
                                 <div>{qtySlice.quantity} {$t("wishes.items")}</div>
                                 <div class="opacity-70">{(qtySlice.ratio * 100).toFixed(1)}%</div>
                             {/if}
@@ -283,8 +284,11 @@
                 <ul class="grid min-w-0 gap-1">
                     {#each slices as slice (getSliceKey(slice))}
                         <li class="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-                            <span class="flex items-center gap-2 min-w-0">
-                                <span class="size-3 rounded-full flex-shrink-0" style={`background:${slice.color};`}></span>
+                            <span class="flex min-w-0 items-center gap-2">
+                                <span
+                                    class="size-3 flex-shrink-0 rounded-full"
+                                    style={`background:${slice.color};`}
+                                ></span>
                                 {#if viewMode === "currency"}
                                     <span>{(slice as PieSlice).currency}</span>
                                 {:else if viewMode === "product"}
@@ -293,13 +297,17 @@
                                     <span class="truncate">{(slice as QuantityPieSlice).name}</span>
                                 {/if}
                             </span>
-                            <span class="break-words text-left sm:text-right">
+                            <span class="text-left break-words sm:text-right">
                                 {#if viewMode === "currency"}
                                     {@const currSlice = slice as PieSlice}
-                                    {formatNumberAsPrice(currSlice.currency, currSlice.total)} ({(currSlice.ratio * 100).toFixed(1)}%)
+                                    {formatNumberAsPrice(currSlice.currency, currSlice.total)} ({(
+                                        currSlice.ratio * 100
+                                    ).toFixed(1)}%)
                                 {:else if viewMode === "product"}
                                     {@const prodSlice = slice as ProductPieSlice}
-                                    {formatNumberAsPrice(prodSlice.currency, prodSlice.total)} ({(prodSlice.ratio * 100).toFixed(1)}%)
+                                    {formatNumberAsPrice(prodSlice.currency, prodSlice.total)} ({(
+                                        prodSlice.ratio * 100
+                                    ).toFixed(1)}%)
                                 {:else if viewMode === "quantity"}
                                     {@const qtySlice = slice as QuantityPieSlice}
                                     {qtySlice.quantity} ({(qtySlice.ratio * 100).toFixed(1)}%)
@@ -327,7 +335,7 @@
             <select
                 id="view-mode"
                 bind:value={viewMode}
-                class="w-full sm:w-auto rounded-lg border border-surface-500 bg-surface-50-950 px-3 py-2"
+                class="border-surface-500 bg-surface-50-950 w-full rounded-lg border px-3 py-2 sm:w-auto"
             >
                 <option value="product">{$t("wishes.view-mode-product")}</option>
                 <option value="currency">{$t("wishes.view-mode-currency")}</option>

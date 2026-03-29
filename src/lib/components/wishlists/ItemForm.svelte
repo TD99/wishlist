@@ -63,7 +63,9 @@
     let disablePricePolling = $state(false);
     let submitSrc = $state("submit");
     let selectedDependencyIds = $derived(new Set(productData.dependencyIds || []));
-    let matchingDependencyOptions = $derived(dependencyOptions.filter((dependency) => dependency.optional === isOptional));
+    let matchingDependencyOptions = $derived(
+        dependencyOptions.filter((dependency) => dependency.optional === isOptional)
+    );
 
     const listsHavingItem = $derived.by(() => {
         return productData.lists
@@ -179,7 +181,6 @@
     $effect(() => {
         disablePricePolling = itemPollingDisabled;
     });
-
 </script>
 
 <div class="grid grid-cols-7 gap-4">
