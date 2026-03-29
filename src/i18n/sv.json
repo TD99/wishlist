@@ -260,7 +260,11 @@
         "oidc-error": "Misslyckades med autentisering med OAuth",
         "unable-to-update-preferred-language": "Det gick inte att uppdatera önskat språk",
         "email-is-required-for-public-claims": "E-postadress krävs för publika anspråk",
-        "display-order-invalid": "Visningsordningen måste vara mellan {min} och {max}"
+        "display-order-invalid": "Visningsordningen måste vara mellan {min} och {max}",
+        "offline-title": "Du är Offline",
+        "offline-message": "Den här sidan är inte tillgänglig offline. Kontrollera anslutningen och försök igen.",
+        "offline-banner-title": "Ingen Internetanslutning",
+        "offline-banner-message": "Vissa funktioner kanske inte är tillgängliga när du är offline"
     },
     "general": {
         "enable": "Aktivera",

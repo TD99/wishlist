@@ -61,9 +61,9 @@ const config: UserConfig = {
                 }
             },
             workbox: {
-                // Prevent the plugin from auto-injecting "/" as a navigation fallback
-                // (which is not precached in adapter-node builds).
-                navigateFallback: undefined,
+                // Use custom offline page for navigation fallback
+                navigateFallback: "/offline",
+                navigateFallbackDenylist: [/^\/_app\//, /^\/api\//],
                 runtimeCaching: [
                     {
                         urlPattern: /\/_app\/immutable\/.+/,

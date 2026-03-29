@@ -221,7 +221,11 @@
         "list-not-found": "リストが見つかりません",
         "must-select-a-group": "グループを選択する必要があります",
         "must-specify-an-item-to-delete": "削除する商品を指定する必要があります",
-        "must-specify-asset-id": "アセットIDを指定する必要があります"
+        "must-specify-asset-id": "アセットIDを指定する必要があります",
+        "offline-title": "オフラインです",
+        "offline-message": "このページはオフラインでは利用できません。接続を確認してもう一度お試しください。",
+        "offline-banner-title": "インターネット接続なし",
+        "offline-banner-message": "オフライン中は一部の機能が利用できない場合があります"
     },
     "wishes": {
         "items": "items",

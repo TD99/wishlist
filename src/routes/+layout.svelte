@@ -16,6 +16,7 @@
     import { navItems } from "$lib/components/navigation/navigation";
     import { setFormatter, setLocale } from "$lib/i18n";
     import Toaster from "$lib/components/toaster/Toaster.svelte";
+    import { getFormatter } from "$lib/i18n";
 
     const { data, children }: LayoutProps = $props();
 
@@ -30,6 +31,7 @@
     let showNavigationLoadingBar = $state(false);
     let documentTitle: string | undefined = $state();
     let disabled = $state(false);
+    let isOnline = $state(true);
     const fallbackFormatter = readable((id: string) => id);
 
     const titleDisabledUrls = [
@@ -154,12 +156,32 @@
         };
 
         const handleOnline = () => {
+            isOnline = true;
             void warmOfflineCache();
         };
+
+        const handleOffline = () => {
+            isOnline = false;
+        };
+
+        // Initialize online state
+        isOnline = navigator.onLine;
+
+        // Check connection status periodically (every 10 seconds)
+        const connectionCheckInterval = setInterval(() => {
+            const currentStatus = navigator.onLine;
+            if (currentStatus !== isOnline) {
+                isOnline = currentStatus;
+                if (currentStatus) {
+                    void warmOfflineCache();
+                }
+            }
+        }, 10000);
 
         window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
         window.addEventListener("appinstalled", handleAppInstalled);
         window.addEventListener("online", handleOnline);
+        window.addEventListener("offline", handleOffline);
 
         if ("serviceWorker" in navigator) {
             void navigator.serviceWorker.ready.then(() => warmOfflineCache());
@@ -245,9 +267,11 @@
             if (installPromptFallbackTimeout !== undefined) {
                 window.clearTimeout(installPromptFallbackTimeout);
             }
+            clearInterval(connectionCheckInterval);
             window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
             window.removeEventListener("appinstalled", handleAppInstalled);
             window.removeEventListener("online", handleOnline);
+            window.removeEventListener("offline", handleOffline);
         };
     });
 
@@ -272,10 +296,22 @@
 
     let footerHeight: number | undefined = $state();
     let toasterYShift: number | undefined = $derived(footerHeight && footerHeight + 12);
+    const t = getFormatter();
 </script>
 
 <div class="min-h-screen">
     <header class="sticky top-0 z-15 print:hidden">
+        {#if !isOnline}
+            <div class="preset-tonal-warning border-warning-500 flex items-center justify-between border-b px-4 py-3 md:px-12 lg:px-32 xl:px-56">
+                <div class="flex items-center gap-x-3">
+                    <iconify-icon class="text-2xl" icon="ion:cloud-offline"></iconify-icon>
+                    <div>
+                        <p class="font-semibold">{$t("errors.offline-banner-title")}</p>
+                        <p class="text-sm opacity-80">{$t("errors.offline-banner-message")}</p>
+                    </div>
+                </div>
+            </div>
+        {/if}
         {#if showNavigationLoadingBar}
             <NavigationLoadingBar />
         {/if}

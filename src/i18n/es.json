@@ -219,7 +219,11 @@
         "unable-to-update-claim": "No se puede actualizar la reclamación",
         "must-select-a-group": "Debe seleccionar un grupo",
         "public-lists-not-allowed": "Este grupo no admite listas públicas",
-        "registration-is-disabled": "El registro está deshabilitado"
+        "registration-is-disabled": "El registro está deshabilitado",
+        "offline-title": "Está Sin Conexión",
+        "offline-message": "Esta página no está disponible sin conexión. Verifique su conexión e intente de nuevo.",
+        "offline-banner-title": "Sin Conexión a Internet",
+        "offline-banner-message": "Algunas funciones pueden no estar disponibles mientras está sin conexión"
     },
     "general": {
         "enter-user-email": "Ingrese el correo del usuario y seleccione el grupo para el usuario",

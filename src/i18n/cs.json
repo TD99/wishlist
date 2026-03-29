@@ -258,7 +258,11 @@
         "username-must-not-be-blank": "Uživatelské jméno nesmí být prázdné",
         "valid-url-not-provided": "Neplatné URL",
         "oidc-error": "Přihlášení přes OAuth se nezdařilo",
-        "display-order-invalid": "Řazení musí být mezi {min} a {max}"
+        "display-order-invalid": "Řazení musí být mezi {min} a {max}",
+        "offline-title": "Jste Offline",
+        "offline-message": "Tato stránka není dostupná offline. Zkontrolujte prosím své připojení a zkuste to znovu.",
+        "offline-banner-title": "Bez Internetového Připojení",
+        "offline-banner-message": "Některé funkce nemusí být dostupné, když jste offline"
     },
     "general": {
         "add-a-description": "Přidat popis",
