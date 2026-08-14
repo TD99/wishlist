@@ -98,7 +98,7 @@
         }
         if (guestStorageKey) {
             try {
-                guest = JSON.parse(localStorage.getItem(guestStorageKey) || "null");
+                guest = JSON.parse(sessionStorage.getItem(guestStorageKey) || "null");
             } catch {
                 guest = null;
             }
@@ -107,7 +107,7 @@
             const name = window.prompt("What is your name?")?.trim();
             if (name) {
                 guest = { id: "", name };
-                localStorage.setItem(guestStorageKey, JSON.stringify(guest));
+                sessionStorage.setItem(guestStorageKey, JSON.stringify(guest));
                 void fetch(`/api/lists/${data.list.id}/guest-items`, {
                     method: "POST",
                     headers: { "content-type": "application/json", "x-wishlist-share-token": publicShareToken || "" },
@@ -119,7 +119,7 @@
                     .then((response) => {
                         if (response) {
                             guest = response.guest;
-                            localStorage.setItem(guestStorageKey, JSON.stringify(response.guest));
+                            sessionStorage.setItem(guestStorageKey, JSON.stringify(response.guest));
                         }
                     });
             }
@@ -310,8 +310,6 @@
             if (!name) return;
             currentGuest = { id: "", name };
         }
-        const name = window.prompt("What would you like to add?")?.trim();
-        if (!name) return;
         const response = await fetch(`/api/lists/${data.list.id}/guest-items`, {
             method: "POST",
             headers: {
@@ -319,7 +317,7 @@
                 "x-wishlist-share-token": publicShareToken,
                 ...(currentGuest.id ? { "x-lists-guest-id": currentGuest.id } : {})
             },
-            body: JSON.stringify({ name, guestName: currentGuest.name })
+            body: JSON.stringify({ guestName: currentGuest.name })
         });
         if (!response.ok) {
             toaster.error({ description: $t("general.oops") });
@@ -327,7 +325,8 @@
         }
         const { guest: savedGuest } = (await response.json()) as { guest: { id: string; name: string } };
         guest = savedGuest;
-        localStorage.setItem(guestStorageKey, JSON.stringify(savedGuest));
+        sessionStorage.setItem(guestStorageKey, JSON.stringify(savedGuest));
+        await goto(`${page.url.pathname}/guest-create-item${page.url.search}`, { replaceState: true });
     };
 
     // custom dnd action to remove the aria disabled flag
