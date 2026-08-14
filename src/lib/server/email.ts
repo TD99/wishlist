@@ -27,7 +27,7 @@ readFile("templates/password-reset.html", "utf-8", (err, data) => {
     if (err) {
         logger.error({ err }, "Error reading password reset email template");
     } else {
-        passResetTempl = Handlebars.compile(data);
+        passResetTempl = Handlebars.compile(data.replaceAll("Wishlist", "Lists"));
     }
 });
 
@@ -35,7 +35,7 @@ readFile("templates/invite.html", "utf-8", (err, data) => {
     if (err) {
         logger.error({ err }, "Error reading invite email template");
     } else {
-        inviteTempl = Handlebars.compile(data);
+        inviteTempl = Handlebars.compile(data.replaceAll("Wishlist", "Lists"));
     }
 });
 
@@ -117,7 +117,7 @@ export const sendPasswordReset = async (to: string, resetUrl: string) => {
     });
     return await sendEmail({
         to,
-        subject: "Wishlist | " + $t("email.pw-reset-title"),
+        subject: "Lists | " + $t("email.pw-reset-title"),
         html,
         text: $t("email.pw-reset-fallback-text", { values: { url: resetUrl } })
     });

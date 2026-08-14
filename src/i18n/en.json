@@ -24,7 +24,7 @@
         "unpurchase": "Mark item as not purchased",
         "upload-profile-image": "upload profile image",
         "user-menu": "User Menu",
-        "wishlist-logo": "Wishlist Logo"
+        "wishlist-logo": "Lists Logo"
     },
     "admin": {
         "about": "About",
@@ -183,17 +183,17 @@
         "your-password-was-reset": "Your password was reset."
     },
     "email": {
-        "invite-body": "You've been invited to join Wishlist! To accept the invitation, click on the link below.",
-        "invite-button": "Join Wishlist",
-        "invite-fallback-text": "Somebody has invited you to join their Wishlist! Follow the link to signup: {url}",
+        "invite-body": "You've been invited to join Lists! To accept the invitation, click on the link below.",
+        "invite-button": "Join Lists",
+        "invite-fallback-text": "Somebody has invited you to join Lists! Follow the link to signup: {url}",
         "invite-footer": "If you do not wish to join or believe this email to be sent in error, then you can ignore this email.",
-        "invite-subject": "Wishlist Invite",
-        "invite-title": "Welcome to Wishlist!",
+        "invite-subject": "Lists Invite",
+        "invite-title": "Welcome to Lists!",
         "pw-reset-body": "If you requested a password reset, click the link below to complete the process. If you didn't make this request, then you can safely ignore this email.",
         "pw-reset-fallback-text": "Follow the link to reset your password {resetUrl}",
         "pw-reset-title": "Reset Password",
         "test-body": "If you're reading this, then congratulations! Email configuration seems to have been set up properly!",
-        "test-subject": "Test from Wishlist"
+        "test-subject": "Test from Lists"
     },
     "errors": {
         "an-item-must-be-added-to-at-least-one-list": "An item must be added to at least one list",
@@ -368,7 +368,7 @@
         "lets-get-started": "Let's get started",
         "next": "Next",
         "unable-to-update-password": "Unable to update password",
-        "welcome-to-wishlist": "Welcome to Wishlist"
+        "welcome-to-wishlist": "Welcome to Lists"
     },
     "unable-to-load-icons": "Unable to load icons.",
     "wishes": {

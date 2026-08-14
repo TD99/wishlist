@@ -100,6 +100,7 @@ model List {
     items       ListItem[]
     claims      ItemClaim[]
     description String?
+    anonymousEditPolicy String @default("guest")
     pricePollingEnabled Boolean @default(true)
     pricePollIntervalMinutes Int @default(720)
 
@@ -116,10 +117,23 @@ model ListShareLink {
     tokenHash String                  @unique
     tokenHint String
     createdAt DateTime                @default(now())
+    access    String                  @default("view")
     accessors ListShareLinkAccessor[]
+    guests    ListGuest[]
 
     @@index([listId])
     @@map("list_share_link")
+}
+
+model ListGuest {
+    id          String        @id @unique @default(cuid())
+    shareLink   ListShareLink @relation(fields: [shareLinkId], references: [id], onDelete: Cascade)
+    shareLinkId String
+    name        String
+    items       ListItem[]
+
+    @@index([shareLinkId])
+    @@map("list_guest")
 }
 
 model ListShareLinkAccessor {
@@ -215,12 +229,15 @@ model ListItem {
     itemId       Int
     addedBy      User    @relation(fields: [addedById], references: [id])
     addedById    String
+    guest        ListGuest? @relation(fields: [guestId], references: [id], onDelete: SetNull)
+    guestId      String?
     approved     Boolean @default(true)
     displayOrder Int?
 
     @@unique([listId, itemId])
     @@index([listId])
     @@index([itemId])
+    @@index([guestId])
     @@map("list_item")
 }
 

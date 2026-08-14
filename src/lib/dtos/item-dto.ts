@@ -30,6 +30,7 @@ export type ClaimDTO = Claimed | PubliclyClaimed;
 interface ListItem {
     listId: string;
     addedBy: MinimalUser;
+    guest?: { id: string; name: string } | null;
     approved: boolean;
     displayOrder: number | null;
     claims: ClaimDTO[];

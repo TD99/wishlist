@@ -58,6 +58,8 @@
     let publicShareToken = $derived(data.publicShareToken || undefined);
     let shareLinks: ShareLinkSummary[] = $state(data.shareLinks || []);
     let canManageList = $derived(data.list.owner.isMe || data.list.isManager);
+    let guest = $state<{ id: string; name: string } | null>(null);
+    const guestStorageKey = $derived(data.shareLinkId ? `lists:guest:${data.shareLinkId}` : "");
 
     // Initialize from server data (cookie) to prevent flicker
     // This value comes from the server, so SSR renders the correct view
@@ -93,6 +95,34 @@
     onMount(() => {
         if (publicShareToken) {
             setPublicListUrl(publicShareToken);
+        }
+        if (guestStorageKey) {
+            try {
+                guest = JSON.parse(localStorage.getItem(guestStorageKey) || "null");
+            } catch {
+                guest = null;
+            }
+        }
+        if (data.anonymousEditAccess && guestStorageKey && !guest) {
+            const name = window.prompt("What is your name?")?.trim();
+            if (name) {
+                guest = { id: "", name };
+                localStorage.setItem(guestStorageKey, JSON.stringify(guest));
+                void fetch(`/api/lists/${data.list.id}/guest-items`, {
+                    method: "POST",
+                    headers: { "content-type": "application/json", "x-wishlist-share-token": publicShareToken || "" },
+                    body: JSON.stringify({ guestName: name })
+                })
+                    .then(async (response) =>
+                        response.ok ? ((await response.json()) as { guest: { id: string; name: string } }) : null
+                    )
+                    .then((response) => {
+                        if (response) {
+                            guest = response.guest;
+                            localStorage.setItem(guestStorageKey, JSON.stringify(response.guest));
+                        }
+                    });
+            }
         }
     });
 
@@ -237,8 +267,8 @@
         allItems = [...allItems, addedItem];
     };
 
-    const getOrCreatePublicList = async () => {
-        const resp = await listAPI.generateShareLink();
+    const getOrCreatePublicList = async (access: "view" | "edit" = "view") => {
+        const resp = await listAPI.generateShareLink(access);
         if (!resp.ok) {
             const description = await resp.text();
             toaster.error({ description });
@@ -270,6 +300,34 @@
 
         shareLinks = shareLinks.filter((link) => link.id !== shareLinkId);
         void refreshShareLinks();
+    };
+
+    const addGuestItem = async () => {
+        if (!publicShareToken || !data.anonymousEditAccess || !data.shareLinkId) return;
+        let currentGuest = guest;
+        if (!currentGuest) {
+            const name = window.prompt("What is your name?")?.trim();
+            if (!name) return;
+            currentGuest = { id: "", name };
+        }
+        const name = window.prompt("What would you like to add?")?.trim();
+        if (!name) return;
+        const response = await fetch(`/api/lists/${data.list.id}/guest-items`, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json",
+                "x-wishlist-share-token": publicShareToken,
+                ...(currentGuest.id ? { "x-lists-guest-id": currentGuest.id } : {})
+            },
+            body: JSON.stringify({ name, guestName: currentGuest.name })
+        });
+        if (!response.ok) {
+            toaster.error({ description: $t("general.oops") });
+            return;
+        }
+        const { guest: savedGuest } = (await response.json()) as { guest: { id: string; name: string } };
+        guest = savedGuest;
+        localStorage.setItem(guestStorageKey, JSON.stringify(savedGuest));
     };
 
     // custom dnd action to remove the aria disabled flag
@@ -410,6 +468,9 @@
 
 <div class="flex flex-wrap-reverse items-start justify-between gap-2 pb-4 print:hidden">
     <div class="flex items-start gap-2">
+        {#if data.anonymousEditAccess && guest}
+            <span class="subtext">Guest: {guest.name}</span>
+        {/if}
         <ListStatistics {items} />
         <ListDistributionModal {items}>
             {#snippet trigger(triggerProps)}
@@ -437,9 +498,20 @@
                         <span class="text-sm">{$t("wishes.public-url")}</span>
                     </TokenCopy>
                 {:else}
-                    <button class="btn btn-xs inset-ring-surface-500 inset-ring" onclick={getOrCreatePublicList}>
-                        {$t("wishes.share")}
-                    </button>
+                    <div class="flex gap-2">
+                        <button
+                            class="btn btn-xs inset-ring-surface-500 inset-ring"
+                            onclick={() => getOrCreatePublicList("view")}
+                        >
+                            Share view
+                        </button>
+                        <button
+                            class="btn btn-xs inset-ring-surface-500 inset-ring"
+                            onclick={() => getOrCreatePublicList("edit")}
+                        >
+                            Share edit
+                        </button>
+                    </div>
                 {/if}
             </div>
         {/if}
@@ -448,7 +520,17 @@
 
 {#if data.list.owner.isMe || data.list.isManager}
     <div class="rounded-container border-surface-500 mb-4 flex flex-col gap-2 border p-3 print:hidden">
-        <h3 class="text-base font-semibold">{$t("wishes.shared-links")}</h3>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-base font-semibold">{$t("wishes.shared-links")}</h3>
+            <div class="flex gap-2">
+                <button class="btn btn-xs" onclick={() => getOrCreatePublicList("view")} type="button">
+                    New view link
+                </button>
+                <button class="btn btn-xs" onclick={() => getOrCreatePublicList("edit")} type="button">
+                    New edit link
+                </button>
+            </div>
+        </div>
         {#if shareLinks.length === 0}
             <p class="subtext">{$t("wishes.no-shared-links")}</p>
         {:else}
@@ -458,6 +540,9 @@
                         <div class="min-w-0">
                             <p class="font-mono text-xs">
                                 {$t("wishes.shared-link-hint", { values: { hint: link.tokenHint } })}
+                            </p>
+                            <p class="subtext text-xs">
+                                {link.access === "edit" ? "Can add and remove items" : "View only"}
                             </p>
                             <p class="subtext text-xs">
                                 {$t("wishes.shared-link-meta", {
@@ -502,6 +587,8 @@
                         showNameAcrossGroups={data.showNameAcrossGroups}
                         user={data.loggedInUser}
                         userCanManage={data.list.isManager}
+                        anonymousEditAccess={data.anonymousEditAccess}
+                        guestId={guest?.id}
                     />
                 </div>
             {/each}
@@ -562,6 +649,8 @@
                                     showNameAcrossGroups={data.showNameAcrossGroups}
                                     user={data.loggedInUser}
                                     userCanManage={data.list.isManager}
+                                    anonymousEditAccess={data.anonymousEditAccess}
+                                    guestId={guest?.id}
                                 />
                             </div>
                         {/each}
@@ -596,6 +685,8 @@
                                         showNameAcrossGroups={data.showNameAcrossGroups}
                                         user={data.loggedInUser}
                                         userCanManage={data.list.isManager}
+                                        anonymousEditAccess={data.anonymousEditAccess}
+                                        guestId={guest?.id}
                                     />
                                 </div>
                             {/each}
@@ -650,6 +741,8 @@
                                     showNameAcrossGroups={data.showNameAcrossGroups}
                                     user={data.loggedInUser}
                                     userCanManage={data.list.isManager}
+                                    anonymousEditAccess={data.anonymousEditAccess}
+                                    guestId={guest?.id}
                                 />
                             </div>
                         {/each}
@@ -684,6 +777,8 @@
                                         showNameAcrossGroups={data.showNameAcrossGroups}
                                         user={data.loggedInUser}
                                         userCanManage={data.list.isManager}
+                                        anonymousEditAccess={data.anonymousEditAccess}
+                                        guestId={guest?.id}
                                     />
                                 </div>
                             {/each}
@@ -708,6 +803,16 @@
         class:bottom-4={!$isInstalled}
         aria-label="add item"
         onclick={() => goto(`${page.url.pathname}/create-item?redirectTo=${page.url.pathname}`, { replaceState: true })}
+    >
+        <iconify-icon class="text-xl md:text-2xl" icon="ion:add"></iconify-icon>
+    </button>
+{:else if data.anonymousEditAccess}
+    <button
+        class="preset-tonal btn btn-icon btn-icon-sm md:btn-icon-base inset-ring-surface-200-800 fixed right-4 z-30 h-16 w-16 p-0! inset-ring md:right-10 md:bottom-10 md:h-20 md:w-20 print:hidden"
+        class:bottom-24={$isInstalled}
+        class:bottom-4={!$isInstalled}
+        aria-label="add item"
+        onclick={() => void addGuestItem()}
     >
         <iconify-icon class="text-xl md:text-2xl" icon="ion:add"></iconify-icon>
     </button>

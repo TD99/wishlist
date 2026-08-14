@@ -105,6 +105,7 @@ export const getListPropertiesSchema = () => {
         pricePollingEnabled: z.coerce.boolean().default(false),
         pollIntervalMinutes: z.coerce.number().int().min(60).default(720),
         description: z.string().max(10000).nullable(),
+        anonymousEditPolicy: z.enum(["own", "guest", "all"]).default("guest"),
         managers: z.string().array().nullable().default([])
     });
 };

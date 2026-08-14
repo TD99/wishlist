@@ -53,7 +53,8 @@ export const load: PageServerLoad = async ({ params }) => {
                     }
                 },
                 groupId: true,
-                description: true
+                description: true,
+                anonymousEditPolicy: true
             }
         })
         .then((list) => list ?? error(404, $t("errors.list-not-found")));
@@ -97,6 +98,7 @@ export const actions: Actions = {
             pricePollingEnabled: form.get("pricePollingEnabled"),
             pollIntervalMinutes: form.get("pollIntervalMinutes"),
             description: form.get("description"),
+            anonymousEditPolicy: form.get("anonymousEditPolicy"),
             managers: form.getAll("managers")
         });
         if (listProperties.error) {
@@ -127,7 +129,8 @@ export const actions: Actions = {
                     pricePollIntervalMinutes: listProperties.data.pollIntervalMinutes,
                     publicShareTokenHash: listProperties.data.public ? undefined : null,
                     publicShareTokenCreatedAt: listProperties.data.public ? undefined : null,
-                    description: trimToNull(listProperties.data.description)
+                    description: trimToNull(listProperties.data.description),
+                    anonymousEditPolicy: listProperties.data.anonymousEditPolicy
                 },
                 where: {
                     id: params.id

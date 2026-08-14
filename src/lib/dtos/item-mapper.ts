@@ -23,6 +23,7 @@ interface ItemClaim extends Pick<PrismaItemClaim, "id" | "purchased" | "quantity
 
 interface ListItem extends Pick<PrismaListItem, "listId" | "approved" | "displayOrder"> {
     addedBy: MinimalUser;
+    guest?: { id: string; name: string } | null;
 }
 
 interface ItemDependency extends Pick<PrismaItemDependency, "dependsOnId"> {

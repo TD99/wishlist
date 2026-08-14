@@ -8,6 +8,8 @@ import { client } from "./prisma";
 export const shareTokenQueryParam = "share";
 export const shareTokenHeader = "x-wishlist-share-token";
 export const shareAccessorCookieName = "wishlist_share_accessor";
+export const guestIdHeader = "x-lists-guest-id";
+export type ShareLinkAccess = "view" | "edit";
 
 const MAX_SHARE_TOKEN_LENGTH = 512;
 const MAX_ACCESSOR_ID_LENGTH = 128;
@@ -83,7 +85,8 @@ export const validateListShareToken = async (list: ShareableList, token: string 
             select: {
                 id: true,
                 listId: true,
-                tokenHash: true
+                tokenHash: true,
+                access: true
             },
             where: {
                 id: parsed.shareLinkId
@@ -97,18 +100,18 @@ export const validateListShareToken = async (list: ShareableList, token: string 
             return { valid: false, shareLinkId: undefined as string | undefined };
         }
 
-        return { valid: true, shareLinkId: shareLink.id };
+        return { valid: true, shareLinkId: shareLink.id, access: shareLink.access as ShareLinkAccess };
     }
 
     // fallback support for legacy one-link token format
     if (list.publicShareTokenHash && hashesMatch(hashToken(token), list.publicShareTokenHash)) {
-        return { valid: true, shareLinkId: undefined as string | undefined };
+        return { valid: true, shareLinkId: undefined as string | undefined, access: "view" as ShareLinkAccess };
     }
 
     return { valid: false, shareLinkId: undefined as string | undefined };
 };
 
-export const createListShareToken = async (listId: string) => {
+export const createListShareToken = async (listId: string, access: ShareLinkAccess = "view") => {
     const shareLinkId = randomUUID();
     const secret = await generateToken();
     const tokenHash = hashToken(secret);
@@ -129,11 +132,13 @@ export const createListShareToken = async (listId: string) => {
                 id: shareLinkId,
                 listId,
                 tokenHash,
-                tokenHint
+                tokenHint,
+                access
             },
             select: {
                 id: true,
                 tokenHint: true,
+                access: true,
                 createdAt: true
             }
         });
@@ -158,6 +163,7 @@ export const getListShareLinks = async (listId: string) => {
         select: {
             id: true,
             tokenHint: true,
+            access: true,
             createdAt: true,
             _count: {
                 select: {

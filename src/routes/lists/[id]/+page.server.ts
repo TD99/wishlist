@@ -59,7 +59,8 @@ export const load = (async ({ params, url, locals, depends, cookies }) => {
                   id: link.id,
                   tokenHint: link.tokenHint,
                   createdAt: link.createdAt,
-                  uniqueAccessorCount: link._count.accessors
+                  uniqueAccessorCount: link._count.accessors,
+                  access: link.access
               }))
           )
         : [];
@@ -112,6 +113,8 @@ export const load = (async ({ params, url, locals, depends, cookies }) => {
         allowAnonymousClaims: config.claims.allowAnonymous,
         suggestionsEnabled: config.suggestions.enable,
         publicShareToken: hasValidShareToken && shareToken ? shareToken : undefined,
+        anonymousEditAccess: !user && hasValidShareToken && shareValidation.access === "edit",
+        shareLinkId: !user && hasValidShareToken ? shareValidation.shareLinkId : undefined,
         shareLinks,
         initialViewPreference: viewPreference || "list"
     };

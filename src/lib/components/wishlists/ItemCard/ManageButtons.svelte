@@ -9,13 +9,16 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
 
-    interface Props extends Pick<InternalItemCardProps, "item" | "user" | "userCanManage"> {
+    interface Props extends Pick<
+        InternalItemCardProps,
+        "item" | "user" | "userCanManage" | "publicShareToken" | "anonymousEditAccess" | "guestId"
+    > {
         onEdit?: VoidFunction;
     }
 
-    const { item, user, userCanManage, onEdit }: Props = $props();
+    const { item, user, userCanManage, publicShareToken, anonymousEditAccess, guestId, onEdit }: Props = $props();
     const t = getFormatter();
-    const listItemAPI = $derived(new ListItemAPI(item.listId, item.id));
+    const listItemAPI = $derived(new ListItemAPI(item.listId, item.id, { shareToken: publicShareToken, guestId }));
 
     let isOnlyManager = $derived(
         (user?.id !== item.user?.id && user?.id !== item.addedBy?.id && userCanManage) || false
@@ -39,6 +42,23 @@
         goto(resolve("/items/[itemId]/edit", { itemId: item.id.toString() }) + `?redirectTo=${page.url.pathname}`, {
             replaceState: true
         });
+    };
+
+    const deleteAsGuest = async () => {
+        if (!confirm(`Delete ${itemNameShort}?`)) return;
+        const response = await listItemAPI.delete();
+        if (!response.ok) toaster.error({ description: $t("general.oops") });
+    };
+
+    const editAsGuest = async () => {
+        const name = window.prompt("Item name", item.name)?.trim();
+        if (!name) return;
+        const response = await listItemAPI._makeRequest("PATCH", "/", {
+            name,
+            url: item.url || "",
+            note: item.note || ""
+        });
+        if (!response.ok) toaster.error({ description: $t("general.oops") });
     };
 </script>
 
@@ -105,5 +125,28 @@
         {@render deleteButton()}
     {:else if userCanManage}
         {@render deleteButton()}
+    {:else if anonymousEditAccess && guestId}
+        <button
+            class="preset-tonal-primary btn btn-icon btn-icon-sm md:btn-icon-base"
+            aria-label={$t("wishes.edit")}
+            onclick={(e) => {
+                e.stopPropagation();
+                void editAsGuest();
+            }}
+            title={$t("wishes.edit")}
+        >
+            <iconify-icon icon="ion:edit"></iconify-icon>
+        </button>
+        <button
+            class="preset-filled-error-500 btn btn-icon btn-icon-sm md:btn-icon-base"
+            aria-label={$t("wishes.delete")}
+            onclick={(e) => {
+                e.stopPropagation();
+                void deleteAsGuest();
+            }}
+            title={$t("wishes.delete")}
+        >
+            <iconify-icon icon="ion:trash"></iconify-icon>
+        </button>
     {/if}
 </div>

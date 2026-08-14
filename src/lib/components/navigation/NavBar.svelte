@@ -27,7 +27,7 @@
                 groups && groups.length > 1 ? "hidden sm:block" : "block"
             ]}
         >
-            Wishlist
+            Lists
         </span>
     </a>
 {/snippet}

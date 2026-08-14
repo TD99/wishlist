@@ -110,7 +110,10 @@
             {@html $t("wishes.for", { values: { name: item.user.name, class: "text-secondary-900-100 font-bold" } })}
         {:else}
             {@html $t("wishes.added-by", {
-                values: { name: item.addedBy.name, class: "text-secondary-900-100 font-bold" }
+                values: {
+                    name: item.guest ? `Guest: ${item.guest.name}` : item.addedBy.name,
+                    class: "text-secondary-900-100 font-bold"
+                }
             })}
         {/if}
     </span>

@@ -24,9 +24,9 @@ const config: UserConfig = {
             includeAssets: ["favicon.ico", "apple-touch-icon.png", "fonts/*.woff", "fonts/*.woff2"],
             manifest: {
                 id: "/",
-                name: "Wishlist",
-                short_name: "Wishlist",
-                description: "Christmas wishlist you can share with the whole family.",
+                name: "Lists",
+                short_name: "Lists",
+                description: "Shareable lists for friends and family.",
                 start_url: "/",
                 scope: "/",
                 display: "standalone",

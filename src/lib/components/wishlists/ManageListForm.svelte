@@ -12,7 +12,17 @@
     import SelectListManagerModal from "../modals/SelectListManagerModal.svelte";
 
     interface ListProps extends Partial<
-        Pick<List, "id" | "icon" | "iconColor" | "name" | "public" | "description" | "pricePollingEnabled">
+        Pick<
+            List,
+            | "id"
+            | "icon"
+            | "iconColor"
+            | "name"
+            | "public"
+            | "description"
+            | "pricePollingEnabled"
+            | "anonymousEditPolicy"
+        >
     > {
         pricePollIntervalMinutes: number;
         owner: Pick<User, "id" | "name" | "username" | "picture">;
@@ -133,6 +143,21 @@
                 value={list.description}
             />
         </div>
+
+        <label class="label col-span-full md:col-span-6" for="anonymousEditPolicy">
+            <span>Anonymous edit access</span>
+            <select
+                id="anonymousEditPolicy"
+                name="anonymousEditPolicy"
+                class="select"
+                value={list.anonymousEditPolicy || "guest"}
+            >
+                <option value="own">Only their own guest items</option>
+                <option value="guest">Any guest-added item</option>
+                <option value="all">All items, including member-added items</option>
+            </select>
+            <span class="subtext">Controls what visitors using an edit link may remove.</span>
+        </label>
 
         <div class="label col-span-full md:col-span-4">
             <label class="checkbox-label w-fit" for="pricePollingEnabled">

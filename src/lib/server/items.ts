@@ -12,6 +12,12 @@ export const getItemInclusions = (listId?: string) => {
                         id: true,
                         name: true
                     }
+                },
+                guest: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
                 }
             },
             where: {

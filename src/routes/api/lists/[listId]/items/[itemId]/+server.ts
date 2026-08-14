@@ -10,9 +10,53 @@ import { tryDeleteImage } from "$lib/server/image-util";
 import { requireLoginOrError } from "$lib/server/auth";
 import { logger } from "$lib/server/logger";
 import z from "zod";
+import { getShareTokenFromRequest, guestIdHeader, validateListShareToken } from "$lib/server/share-link";
 
 // Approve an item on a list
-export const PATCH: RequestHandler = async ({ request, params }) => {
+export const PATCH: RequestHandler = async ({ request, params, url, locals }) => {
+    if (!locals.user) {
+        const $t = await getFormatter();
+        const body = (await request.json().catch(() => null)) as {
+            name?: unknown;
+            url?: unknown;
+            note?: unknown;
+        } | null;
+        if (!body || typeof body.name !== "string" || !body.name.trim()) error(422, $t("errors.item-not-found"));
+        const [list, listItem] = await Promise.all([
+            client.list.findUnique({
+                where: { id: params.listId },
+                select: { id: true, public: true, publicShareTokenHash: true, anonymousEditPolicy: true }
+            }),
+            client.listItem.findUnique({
+                where: { listId_itemId: { listId: params.listId, itemId: parseInt(params.itemId) } },
+                select: { guestId: true }
+            })
+        ]);
+        const share = list && (await validateListShareToken(list, getShareTokenFromRequest(request, url)));
+        const guestId = request.headers.get(guestIdHeader);
+        const guest =
+            guestId && share?.shareLinkId
+                ? await client.listGuest.findFirst({ where: { id: guestId, shareLinkId: share.shareLinkId } })
+                : null;
+        const allowed =
+            !!guest &&
+            !!listItem &&
+            share?.valid &&
+            share.access === "edit" &&
+            (list!.anonymousEditPolicy === "all" ||
+                (list!.anonymousEditPolicy === "guest" && !!listItem.guestId) ||
+                (list!.anonymousEditPolicy === "own" && listItem.guestId === guest.id));
+        if (!allowed) error(401, $t("errors.not-authorized"));
+        await client.item.update({
+            where: { id: parseInt(params.itemId) },
+            data: {
+                name: body.name.trim(),
+                url: typeof body.url === "string" ? body.url.trim() || null : null,
+                note: typeof body.note === "string" ? body.note.trim() || null : null
+            }
+        });
+        return new Response(null, { status: 200 });
+    }
     const user = await requireLoginOrError();
     const $t = await getFormatter();
 
@@ -76,8 +120,8 @@ export const PATCH: RequestHandler = async ({ request, params }) => {
 };
 
 // Delete an item on a list
-export const DELETE: RequestHandler = async ({ params }) => {
-    const user = await requireLoginOrError();
+export const DELETE: RequestHandler = async ({ request, params, url, locals }) => {
+    const user = locals.user;
     const $t = await getFormatter();
 
     if (isNaN(parseInt(params.itemId))) {
@@ -87,7 +131,11 @@ export const DELETE: RequestHandler = async ({ params }) => {
     const [list, item, listItem, claims] = await Promise.all([
         client.list.findUnique({
             select: {
+                id: true,
                 ownerId: true,
+                public: true,
+                publicShareTokenHash: true,
+                anonymousEditPolicy: true,
                 managers: {
                     select: {
                         userId: true
@@ -117,7 +165,8 @@ export const DELETE: RequestHandler = async ({ params }) => {
         client.listItem.findUnique({
             select: {
                 id: true,
-                addedById: true
+                addedById: true,
+                guestId: true
             },
             where: {
                 listId_itemId: {
@@ -147,13 +196,24 @@ export const DELETE: RequestHandler = async ({ params }) => {
         error(404, $t("errors.item-not-found"));
     }
 
-    if (
-        listItem.addedById !== user.id &&
-        list.ownerId !== user.id &&
-        !list.managers.find(({ userId }) => userId === user.id)
-    ) {
-        error(401, $t("errors.not-authorized"));
+    const isAuthenticatedManager =
+        !!user && (list.ownerId === user.id || list.managers.some(({ userId }) => userId === user.id));
+    const isAuthenticatedAdder = !!user && listItem.addedById === user.id;
+    let isGuestAllowed = false;
+    if (!user) {
+        const share = await validateListShareToken(list, getShareTokenFromRequest(request, url));
+        const guestId = request.headers.get(guestIdHeader);
+        if (share.valid && share.access === "edit" && guestId) {
+            const guest = await client.listGuest.findFirst({ where: { id: guestId, shareLinkId: share.shareLinkId } });
+            if (guest) {
+                isGuestAllowed =
+                    list.anonymousEditPolicy === "all" ||
+                    (list.anonymousEditPolicy === "guest" && !!listItem.guestId) ||
+                    (list.anonymousEditPolicy === "own" && listItem.guestId === guest.id);
+            }
+        }
     }
+    if (!isAuthenticatedAdder && !isAuthenticatedManager && !isGuestAllowed) error(401, $t("errors.not-authorized"));
 
     try {
         await client.$transaction(async (tx) => {
@@ -174,7 +234,10 @@ export const DELETE: RequestHandler = async ({ params }) => {
             }
 
             // Item was only on this list, we should delete it
-            if (item.lists.length === 1 && (item.createdById === user.id || item.userId === user.id)) {
+            if (
+                item.lists.length === 1 &&
+                (isGuestAllowed || (!!user && (item.createdById === user.id || item.userId === user.id)))
+            ) {
                 await tx.item.delete({
                     where: {
                         id: item.id

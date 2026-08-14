@@ -351,11 +351,11 @@
     </footer>
 </div>
 
-{#if !$isInstalled && (deferredInstallPrompt || showManualInstallPrompt)}
+{#if !page.url.searchParams.has("share") && !$isInstalled && (deferredInstallPrompt || showManualInstallPrompt)}
     <aside
         class="rounded-container bg-surface-100-900 border-surface-500 fixed right-4 bottom-28 z-20 max-w-72 border p-3 shadow-xl md:bottom-32"
     >
-        <p class="font-semibold">Install Wishlist</p>
+        <p class="font-semibold">Install Lists</p>
         {#if deferredInstallPrompt}
             <p class="subtext pt-1">Use the app offline and keep your data available without a connection.</p>
         {:else}

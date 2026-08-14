@@ -6,6 +6,7 @@ export interface ShareLinkSummary {
     tokenHint: string;
     createdAt: string | Date;
     uniqueAccessorCount: number;
+    access: "view" | "edit";
 }
 
 export class ListAPI {
@@ -44,8 +45,8 @@ export class ListAPI {
         return await this._makeRequest("PATCH", "/", { public: true });
     };
 
-    generateShareLink = async () => {
-        return await this._makeRequest("POST", "/share-links");
+    generateShareLink = async (access: "view" | "edit" = "view") => {
+        return await this._makeRequest("POST", "/share-links", { access });
     };
 
     updateItems = async (data: z.infer<typeof listItemsUpdateSchema>[]) => {
@@ -66,10 +67,13 @@ export class ListItemAPI {
     private itemId: number;
     private shareToken?: string;
 
-    constructor(listId: string, itemId: number, options?: { shareToken?: string }) {
+    private guestId?: string;
+
+    constructor(listId: string, itemId: number, options?: { shareToken?: string; guestId?: string }) {
         this.listId = listId;
         this.itemId = itemId;
         this.shareToken = options?.shareToken;
+        this.guestId = options?.guestId;
     }
 
     _makeRequest = async (method: string, path: string = "/", data?: Record<string, any>) => {
@@ -86,6 +90,7 @@ export class ListItemAPI {
                 "x-wishlist-share-token": this.shareToken
             };
         }
+        if (this.guestId) options.headers = { ...options.headers, "x-lists-guest-id": this.guestId };
 
         if (data) {
             options.body = JSON.stringify(data);

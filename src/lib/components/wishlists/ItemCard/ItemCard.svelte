@@ -23,6 +23,8 @@
         onDecreasePriority?: ItemVoidFunction;
         onPriorityChange?: (item: ItemOnListDTO, idx: string) => void;
         isTileView?: boolean;
+        anonymousEditAccess?: boolean;
+        guestId?: string;
     }
 
     export interface InternalItemCardProps {
@@ -43,6 +45,8 @@
         onIncreasePriority?: ItemVoidFunction;
         onDecreasePriority?: ItemVoidFunction;
         onPriorityChange?: (item: ItemOnListDTO, idx: string) => void;
+        anonymousEditAccess: boolean;
+        guestId?: string;
         defaultImage: Snippet<[MessageFormatter, classes?: ClassValue]>;
     }
 </script>
@@ -76,7 +80,9 @@
         onIncreasePriority = undefined,
         onDecreasePriority = undefined,
         onPriorityChange,
-        isTileView = false
+        isTileView = false,
+        anonymousEditAccess = false,
+        guestId = undefined
     }: ItemCardProps = $props();
 
     const id = $props.id();
@@ -133,6 +139,8 @@
     {showNameAcrossGroups}
     {user}
     {userCanManage}
+    {anonymousEditAccess}
+    {guestId}
     bind:open={drawerOpen}
 />
 
@@ -170,5 +178,7 @@
         {showNameAcrossGroups}
         {user}
         {userCanManage}
+        {anonymousEditAccess}
+        {guestId}
     />
 </div>

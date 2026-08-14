@@ -51,13 +51,14 @@ export const GET: RequestHandler = async ({ params, locals }) => {
                 id: link.id,
                 tokenHint: link.tokenHint,
                 createdAt: link.createdAt,
-                uniqueAccessorCount: link._count.accessors
+                uniqueAccessorCount: link._count.accessors,
+                access: link.access
             }))
         )
     );
 };
 
-export const POST: RequestHandler = async ({ params, locals }) => {
+export const POST: RequestHandler = async ({ request, params, locals }) => {
     const user = await requireLoginOrError();
     const $t = await getFormatter(locals.locale);
     const list = await validateManagerAccess(params.listId, user, locals.locale);
@@ -67,14 +68,17 @@ export const POST: RequestHandler = async ({ params, locals }) => {
         error(422, $t("errors.public-lists-not-allowed"));
     }
 
-    const { shareLink, token } = await createListShareToken(params.listId);
+    const body = (await request.json().catch(() => ({}))) as { access?: string };
+    const access = body.access === "edit" ? "edit" : "view";
+    const { shareLink, token } = await createListShareToken(params.listId, access);
     return new Response(
         JSON.stringify({
             id: shareLink.id,
             tokenHint: shareLink.tokenHint,
             createdAt: shareLink.createdAt,
             uniqueAccessorCount: 0,
-            shareToken: token
+            shareToken: token,
+            access: shareLink.access
         }),
         { status: 201 }
     );
