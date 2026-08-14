@@ -35,6 +35,7 @@
         saving: boolean;
         showItemPollingDisable?: boolean;
         itemPollingDisabled?: boolean;
+        guestMode?: boolean;
     }
 
     let {
@@ -45,7 +46,8 @@
         currentList,
         saving = false,
         showItemPollingDisable = false,
-        itemPollingDisabled = false
+        itemPollingDisabled = false,
+        guestMode = false
     }: Props = $props();
     const t = getFormatter();
 
@@ -261,7 +263,7 @@
         <CurrencyInput id="price" name="price" currency={userCurrency} bind:value={price} />
     </label>
 
-    {#if showItemPollingDisable}
+    {#if showItemPollingDisable && !guestMode}
         <div class="label col-span-full sm:col-span-3 xl:col-span-2">
             <label class="checkbox-label w-fit" for="disablePricePolling">
                 <input
@@ -367,7 +369,7 @@
 
     <fieldset
         class="col-span-full flex flex-col space-y-2"
-        class:hidden={matchingDependencyOptions.length === 0}
+        class:hidden={guestMode || matchingDependencyOptions.length === 0}
         aria-labelledby="dependency-label"
     >
         <legend id="dependency-label">{$t("wishes.depends-on-items")}</legend>
@@ -405,7 +407,7 @@
 
     <fieldset
         class="col-span-full flex flex-col space-y-2 md:col-span-5"
-        class:hidden={lists.length <= 1}
+        class:hidden={guestMode || lists.length <= 1}
         aria-labelledby="lists-label"
     >
         <div class="flex items-end justify-between">
@@ -444,6 +446,10 @@
         {/if}
     </fieldset>
 
+    {#if guestMode && currentList}
+        <input name="lists" type="hidden" value={currentList} />
+    {/if}
+
     <span class="col-span-full text-sm">*{$t("general.required-field")}</span>
 
     <div class="col-span-full flex w-full flex-col-reverse gap-2 sm:w-full sm:flex-row sm:justify-between">
@@ -456,7 +462,7 @@
             {$t("general.cancel")}
         </button>
         <div class="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
-            {#if !item.id}
+            {#if !item.id && !guestMode}
                 <button
                     id="submit-stay"
                     class="btn preset-outlined-primary-500"

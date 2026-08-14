@@ -50,15 +50,9 @@
         if (!response.ok) toaster.error({ description: $t("general.oops") });
     };
 
-    const editAsGuest = async () => {
-        const name = window.prompt("Item name", item.name)?.trim();
-        if (!name) return;
-        const response = await listItemAPI._makeRequest("PATCH", "/", {
-            name,
-            url: item.url || "",
-            note: item.note || ""
-        });
-        if (!response.ok) toaster.error({ description: $t("general.oops") });
+    const editAsGuest = () => {
+        onEdit?.();
+        goto(`/lists/${item.listId}/items/${item.id}/edit${page.url.search}`, { replaceState: true });
     };
 </script>
 
@@ -131,7 +125,7 @@
             aria-label={$t("wishes.edit")}
             onclick={(e) => {
                 e.stopPropagation();
-                void editAsGuest();
+                editAsGuest();
             }}
             title={$t("wishes.edit")}
         >

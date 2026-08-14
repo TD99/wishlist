@@ -144,6 +144,7 @@ const listByIdSelection = {
     },
     groupId: true,
     public: true,
+    anonymousEditPolicy: true,
     pricePollingEnabled: true,
     description: true
 } satisfies Prisma.ListSelect;

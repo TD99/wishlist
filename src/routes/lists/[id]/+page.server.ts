@@ -60,7 +60,7 @@ export const load = (async ({ params, url, locals, depends, cookies }) => {
                   tokenHint: link.tokenHint,
                   createdAt: link.createdAt,
                   uniqueAccessorCount: link._count.accessors,
-                  access: link.access
+                  access: link.access as "view" | "edit"
               }))
           )
         : [];
