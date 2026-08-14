@@ -48,6 +48,37 @@ const toNumberOrNull = (value: unknown) => {
     return null;
 };
 
+type BambuLabPrice = { price: number; currency: string | null };
+
+/**
+ * Bambu Lab's storefront renders a selected variant's price in its serialized
+ * storefront state instead of the usual product/offer metadata. The `id`
+ * query parameter is that variant id and Shopify stores prices as minor units.
+ */
+const getBambuLabPrice = (html: string, url: URL): BambuLabPrice | null => {
+    if (!url.hostname.endsWith("store.bambulab.com")) return null;
+
+    const variantId = url.searchParams.get("id") || url.searchParams.get("variant");
+    const source = html.replaceAll('\\"', '"');
+    const variantIndex = variantId ? source.indexOf(variantId) : -1;
+    const objectStart = variantIndex >= 0 ? source.lastIndexOf("{", variantIndex) : -1;
+    const objectEnd = variantIndex >= 0 ? source.indexOf("}", variantIndex) : -1;
+    const variantObject = objectStart >= 0 && objectEnd > variantIndex ? source.slice(objectStart, objectEnd + 1) : "";
+    const context =
+        variantObject ||
+        (variantIndex >= 0 ? source.slice(Math.max(0, variantIndex - 2500), variantIndex + 2500) : source);
+    const priceMatch = context.match(/"(?:price|sale_price|final_price)"\s*:\s*"?([0-9]+(?:[.,][0-9]+)?)"?/i);
+    if (!priceMatch) return null;
+
+    const rawPrice = priceMatch[1].replace(",", ".");
+    const numericPrice = Number.parseFloat(rawPrice);
+    if (!Number.isFinite(numericPrice)) return null;
+    const price = rawPrice.includes(".") ? numericPrice : numericPrice / 100;
+    const currencyMatch = context.match(/"(?:currency|currency_code|currencyCode)"\s*:\s*"([A-Z]{3})"/i);
+    const documentCurrencyMatch = source.match(/"(?:currency|currency_code|currencyCode)"\s*:\s*"([A-Z]{3})"/i);
+    return { price, currency: currencyMatch?.[1]?.toUpperCase() || documentCurrencyMatch?.[1]?.toUpperCase() || null };
+};
+
 const normalizeProductData = (metadata: Metadata): ProductData => {
     return {
         brand: typeof metadata.brand === "string" ? metadata.brand : null,
@@ -78,16 +109,22 @@ const fetchProductData = async (targetUrl: URL, locales: string[]) => {
             }
         });
 
-        return await scraper({ html: response.body, url: response.url });
+        return {
+            metadata: await scraper({ html: response.body, url: response.url }),
+            html: response.body,
+            url: response.url
+        };
     } catch (err) {
         throw new ProductScrapeError(`Unable to fetch product data from ${targetUrl}: ${String(err)}`, "network");
     }
 };
 
 export const scrapeProductData = async (targetUrl: URL, locales: string[] = []) => {
-    let metadata = await fetchProductData(targetUrl, locales);
+    let response = await fetchProductData(targetUrl, locales);
+    let metadata = response.metadata;
     if (isCaptchaResponse(metadata) && metadata.url) {
-        metadata = await fetchProductData(new URL(metadata.url), locales);
+        response = await fetchProductData(new URL(metadata.url), locales);
+        metadata = response.metadata;
     }
 
     if (isCaptchaResponse(metadata)) {
@@ -98,5 +135,11 @@ export const scrapeProductData = async (targetUrl: URL, locales: string[] = []) 
         metadata.url = targetUrl.toString();
     }
 
-    return normalizeProductData(metadata);
+    const product = normalizeProductData(metadata);
+    const bambuLabPrice = getBambuLabPrice(response.html, new URL(response.url));
+    return {
+        ...product,
+        price: product.price ?? bambuLabPrice?.price ?? null,
+        currency: product.currency ?? bambuLabPrice?.currency ?? null
+    };
 };
